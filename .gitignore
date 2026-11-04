@@ -7,3 +7,4 @@ firmware/fatfs_image/DongleConfig.exe
 dist/
 __pycache__/
 *.jsonl
+*.bin

@@ -48,6 +48,9 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
 - 0.96" ST7735S LCD: SCLK 10, MOSI 11, CS 12, DC 13, RST 14, 백라이트 상시 ON
 - TF 슬롯: GPIO15~18, 47, 48
 - 참고 자료: 판매처 제공 패키지(회로도 `ESP32-S3-0.96LCD.pdf`, Arduino/IDF 예제, 원래 펌웨어 `.bin`) — 원래 펌웨어로 복구할 때 필요
+- **처음 플래시하기 전에 원래 펌웨어 백업 권장**: 다운로드 모드(K1 누른 채 꽂기)에서
+  `python -m esptool --chip esp32s3 -p COMx read-flash 0 0x1000000 dist\original-flash-16MB.bin` (복구: 같은 파일을 0x0에 write-flash).
+  `*.bin`은 gitignore라 레포에 올라가지 않음.
 
 > ESP32-S3는 **BLE만** 지원(BT Classic 없음). Windows "디바이스 추가"에 보여도 클래식 장치(예: 셀카 리모컨 Beauty-R1)는 검색·연결 불가.
 > 장치 종류 확인: `python tool\ble_inspect.py scan`에 나오면 BLE, 안 나오면 클래식일 가능성이 큼.
@@ -136,5 +139,4 @@ python tool\usb_monitor.py watch
 - [ ] **실제 BLE 리모콘으로 미검증** (페어링/본딩/재연결), LCD 방향·오프셋 보정 (`lcd.c` 상단 상수)
 - [x] G20BTS 리모콘: 페어링, 재플래시 후 자동 재연결, Report Map 해석 확인
 - [ ] 주소가 바뀌는(RPA) 장치는 재연결 안 될 수 있음. 미디어키 출력은 한 번에 1개
-- [ ] 원래 펌웨어 백업: `dist\original-flash-16MB.bin` (0x0에 기록하면 복구, gitignore라 이 PC에만 있음)
 - [ ] 실제 제품화 시 자체 VID/PID 필요 (`303A:4007`은 개발용)
