@@ -18,6 +18,7 @@
 #include "freertos/task.h"
 #include "keymap.h"
 #include "keymap_nvs.h"
+#include "lcd.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "usb.h"
@@ -98,6 +99,19 @@ static void print_state(const char *prefix)
     line("%s %s " ESP_BD_ADDR_STR " %s", prefix, st, ESP_BD_ADDR_HEX(s_dev.bda), s_dev.name);
 }
 
+// Device state changed: tell the config tool (`evt ...`) and the LCD.
+static void state_changed(void)
+{
+    char addr[18];
+    snprintf(addr, sizeof(addr), ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX(s_dev.bda));
+    print_state("evt");
+    if (!have_dev()) {
+        lcd_show("No device", LCD_GRAY, "Press K1 to", "pair or use DongleConfig");
+    } else {
+        lcd_show(s_conn ? "Connected" : "Searching..", s_conn ? LCD_GREEN : LCD_YELLOW, s_dev.name, addr);
+    }
+}
+
 static void bonds_clear(void)
 {
     int n = esp_ble_get_bond_device_num();
@@ -127,7 +141,7 @@ static void dev_set(const uint8_t *bda, uint8_t addr_type)
         esp_hidh_dev_close(c);  // its CLOSE event clears s_conn
     }
     bonds_clear();  // single-device dongle: the old remote must pair again to come back
-    print_state("evt");
+    state_changed();
     xTaskNotifyGive(s_ble_task);
 }
 
@@ -166,7 +180,7 @@ static void hidh_callback(void *handler_args, esp_event_base_t base, int32_t id,
         if (param->close.dev == s_conn) {
             s_conn = NULL;
             km_release_all();
-            print_state("evt");
+            state_changed();
             xTaskNotifyGive(s_ble_task);
         }
         break;
@@ -182,6 +196,7 @@ static void do_scan(void)
     bool pair = s_scan_pair;
     s_scan_secs = 0, s_scan_pair = false;
     line("evt scan %d", secs);
+    lcd_show("Scanning..", LCD_CYAN, pair ? "pairing the" : "", pair ? "nearest device" : "");
     size_t count = 0;
     esp_hid_scan_result_t *results = NULL, *best = NULL;
     esp_hid_scan((uint32_t)secs, &count, &results);
@@ -197,6 +212,8 @@ static void do_scan(void)
     line("evt scan end %u", (unsigned)count);
     if (pair && best) {
         dev_set(best->bda, best->ble.addr_type);
+    } else {
+        state_changed();  // back from the "Scanning" screen
     }
     esp_hid_scan_results_free(results);
 }
@@ -224,7 +241,7 @@ static void ble_task(void *arg)
                     snprintf(s_dev.name, sizeof(s_dev.name), "%s", name);
                     dev_save();
                 }
-                print_state("evt");
+                state_changed();
             } else {
                 ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(1000));  // asleep / out of range: retry
             }
@@ -312,6 +329,8 @@ void app_main(void)
     keymap_nvs_load();
     dev_load();
     usb_init();  // HID is up before BLE: the stick is a keyboard right away
+    lcd_init();
+    state_changed();
 
     ESP_ERROR_CHECK(esp_hid_gap_init(HIDH_BLE_MODE));
     ESP_ERROR_CHECK(esp_ble_gattc_register_callback(esp_hidh_gattc_event_handler));
