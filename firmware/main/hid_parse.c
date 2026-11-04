@@ -154,8 +154,6 @@ void hp_extract(const hp_map_t *m, uint8_t rid, const uint8_t *data, size_t len,
                         press(o, f->page, (uint16_t)usage);
                     }
                 }
-            } else if (f->page == HP_PAGE_DESKTOP && f->relative && (f->umin == 0x30 || f->umin == 0x31 || f->umin == 0x38)) {
-                *(f->umin == 0x30 ? &o->dx : f->umin == 0x31 ? &o->dy : &o->wheel) += v;
             } else if (!f->relative && v != 0 &&
                        (f->size == 1 || f->page == HP_PAGE_KEYBOARD || f->page == HP_PAGE_CONSUMER || f->page == HP_PAGE_BUTTON)) {
                 press(o, f->page, (uint16_t)(f->umin + e));  // buttons, modifier bits, consumer bitmaps (not axes/values)

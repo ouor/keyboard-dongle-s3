@@ -60,7 +60,7 @@ class DongleConfig : Form
         var mapTab = new TabPage("키 매핑");
         key.Items.AddRange(KeyCodes.Names);  // generated from tool/keycodes.json
         mapTab.Controls.Add(maps);
-        mapTab.Controls.Add(Row(remove, new Label { AutoSize = true, Padding = new Padding(0, 6, 0, 0), Text = "매핑 안 된 키는 원래 키 그대로, 마우스 움직임은 그대로 나갑니다" }));
+        mapTab.Controls.Add(Row(remove, new Label { AutoSize = true, Padding = new Padding(0, 6, 0, 0), Text = "매핑된 키만 USB로 나갑니다 (마우스 움직임은 안 나감)" }));
         mapTab.Controls.Add(Row(new Label { AutoSize = true, Text = "입력:", Padding = new Padding(0, 6, 0, 0) }, captured, new Label { AutoSize = true, Text = "→", Padding = new Padding(0, 6, 0, 0) }, key, apply));
 
         var logTab = new TabPage("로그");

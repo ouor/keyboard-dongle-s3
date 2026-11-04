@@ -14,17 +14,16 @@ static int s_count;
 static const hp_map_t *s_maps;
 static int s_nmaps;
 
-// A key that is down right now, and what we sent for it.
-enum { OUT_NONE, OUT_KEY, OUT_MOUSE };
+// A remote key that is down right now, and the USB key we pressed for it (if mapped).
 typedef struct {
-    uint8_t rid, out;
+    uint8_t rid;
+    bool mapped;
     hp_key_t in;
-    uint8_t page;    // OUT_KEY: KC_PAGE_*
-    uint16_t usage;  // OUT_KEY: usage, OUT_MOUSE: button bit
+    uint8_t page;  // KC_PAGE_*
+    uint16_t usage;
 } held_t;
 static held_t s_held[HP_MAX_KEYS * 2];
 static int s_nheld;
-static uint8_t s_buttons;  // mouse buttons we report
 
 static void printf_line(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 static void printf_line(const char *fmt, ...)
@@ -96,19 +95,10 @@ static km_entry_t *match(hp_key_t k)
     return NULL;
 }
 
-static void send_mouse(int32_t dx, int32_t dy, int32_t wheel)
-{
-#define CLAMP(v) (int8_t)((v) < -127 ? -127 : (v) > 127 ? 127 : (v))
-    hw_mouse_report(s_buttons, CLAMP(dx), CLAMP(dy), CLAMP(wheel));  // shortcut: big 12/16-bit moves clamp to 127
-}
-
 static void release(held_t *h)
 {
-    if (h->out == OUT_KEY) {
+    if (h->mapped) {
         hw_key(h->page, h->usage, false);
-    } else if (h->out == OUT_MOUSE) {
-        s_buttons &= (uint8_t)~h->usage;
-        send_mouse(0, 0, 0);
     }
 }
 
@@ -127,26 +117,17 @@ void km_set_maps(const hp_map_t *maps, int n)
     s_nmaps = n;
 }
 
-// Mapped key -> its USB key. Unmapped: keyboard/consumer usages and mouse buttons pass through as they are.
+// Only mapped keys reach USB; unmapped ones are still tracked so `key` events go to the config tool.
 static void press(uint8_t rid, hp_key_t k)
 {
     if (s_nheld >= (int)(sizeof(s_held) / sizeof(s_held[0]))) {
         return;
     }
-    held_t h = {.rid = rid, .in = k, .out = OUT_NONE};
+    held_t h = {.rid = rid, .in = k};
     const km_entry_t *e = match(k);
-    int kp = kc_page(k.page);
     if (e) {
-        h.out = OUT_KEY, h.page = e->page, h.usage = e->usage;
-    } else if (kp >= 0) {
-        h.out = OUT_KEY, h.page = (uint8_t)kp, h.usage = k.usage;
-    } else if (k.page == HP_PAGE_BUTTON && k.usage >= 1 && k.usage <= 8) {
-        h.out = OUT_MOUSE, h.usage = (uint16_t)(1u << (k.usage - 1));
-    }
-    if (h.out == OUT_KEY) {
+        h.mapped = true, h.page = e->page, h.usage = e->usage;
         hw_key(h.page, h.usage, true);
-    } else if (h.out == OUT_MOUSE) {
-        s_buttons |= (uint8_t)h.usage;
     }
     s_held[s_nheld++] = h;
 }
@@ -163,7 +144,6 @@ bool km_on_report(uint8_t rid, const uint8_t *data, size_t len)
     hp_input_t in;
     hp_extract(m, rid, data, len, &in);
     bool changed = false;
-    uint8_t buttons = s_buttons;
 
     for (int i = 0; i < s_nheld;) {  // released: held from this report, no longer in it
         held_t *h = &s_held[i];
@@ -176,11 +156,7 @@ bool km_on_report(uint8_t rid, const uint8_t *data, size_t len)
             continue;
         }
         printf_line("key %02x:%04x 0 %s", h->in.page, h->in.usage, in_name(h->in));
-        if (h->out == OUT_MOUSE) {
-            s_buttons &= (uint8_t)~h->usage;  // sent below with the motion
-        } else {
-            release(h);
-        }
+        release(h);
         *h = s_held[--s_nheld];
         changed = true;
     }
@@ -194,9 +170,6 @@ bool km_on_report(uint8_t rid, const uint8_t *data, size_t len)
             press(rid, in.keys[k]);
             changed = true;
         }
-    }
-    if (in.dx || in.dy || in.wheel || buttons != s_buttons) {
-        send_mouse(in.dx, in.dy, in.wheel);
     }
     return changed;
 }

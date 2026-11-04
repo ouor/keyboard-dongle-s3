@@ -1,5 +1,5 @@
-// HID report descriptor (BLE "Report Map") -> input fields, and input report -> pressed usages + mouse axes.
-// Pure C (no ESP-IDF) so it runs in host tests. Makes passthrough and mapping independent of each device's layout.
+// HID report descriptor (BLE "Report Map") -> input fields, and input report -> pressed usages (axes are ignored).
+// Pure C (no ESP-IDF) so it runs in host tests. Makes mapping independent of each device's layout.
 #pragma once
 #include <stdbool.h>
 #include <stddef.h>
@@ -34,12 +34,11 @@ typedef struct {
 typedef struct {
     hp_key_t keys[HP_MAX_KEYS];  // usages currently down in this report
     int nkeys;
-    int32_t dx, dy, wheel;       // relative Generic Desktop X / Y / Wheel
 } hp_input_t;
 
 // Parses a report descriptor into `out` (appends). Returns false on a malformed descriptor or too many fields.
 bool hp_parse(const uint8_t *desc, size_t len, hp_map_t *out);
 // True if `map` describes input report `rid`.
 bool hp_has_report(const hp_map_t *map, uint8_t rid);
-// Decodes one input report. Unknown rid -> nothing pressed, no motion.
+// Decodes one input report. Unknown rid -> nothing pressed.
 void hp_extract(const hp_map_t *map, uint8_t rid, const uint8_t *data, size_t len, hp_input_t *out);

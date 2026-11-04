@@ -18,11 +18,11 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
 | `dev.ps1` | 빌드/플래시/테스트 진입점 (아래 표) |
 | `firmware/main/main.c` | 앱 진입점: 저장된 BLE 장치 재연결, scan/pair/forget, K1 → 리포트를 `keymap`과 CDC로 전달 |
 | `firmware/main/lcd.c` | 0.96" LCD 상태 화면 (연결 상태, 장치명) |
-| `firmware/main/hid_parse.c` | 장치의 Report Map 해석 → 리포트에서 눌린 키(page:usage)와 마우스 축 추출. 장치별 레이아웃 무관 |
-| `firmware/main/keymap.c` | 키(page:usage) 매핑·패스스루 + CDC 명령 처리. 둘 다 ESP 의존 없음 → `firmware/test/`에서 PC로 테스트 |
+| `firmware/main/hid_parse.c` | 장치의 Report Map 해석 → 리포트에서 눌린 키(page:usage) 추출. 장치별 레이아웃 무관 |
+| `firmware/main/keymap.c` | 키(page:usage) 매핑 + CDC 명령 처리. 둘 다 ESP 의존 없음 → `firmware/test/`에서 PC로 테스트 |
 | `firmware/main/usb.c` | USB 디스크립터, HID 출력, CDC 입출력, MSC, `dfu` |
 | `firmware/main/keymap_nvs.c` | 키맵 NVS 저장/로드 |
-| `firmware/main/esp_hid_gap.*` | IDF 예제에서 그대로 복사한 BLE GAP 헬퍼 (수정 안 함) |
+| `firmware/main/esp_hid_gap.*` | IDF 예제에서 복사한 BLE GAP 헬퍼 (스캔 HID 판별 `adv_is_hid()`만 수정) |
 | `firmware/fatfs_image/` | USB 드라이브에 들어갈 파일 (빌드 시 exe가 생성됨) |
 | `tool/DongleConfig.cs`, `tool/build.ps1` | 스틱에 실리는 설정 exe 소스/빌드 |
 | `tool/keycodes.json` → `gen_keycodes.py` | 키 이름 단일 소스 → `firmware/main/keycodes.h`, `tool/KeyCodes.cs` 생성 (직접 수정 금지) |
@@ -36,7 +36,7 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
 2. 스틱을 꽂고 `.\dev.ps1 flash` (첫 플래시가 안 잡히면 K1/BOOT 누른 채 꽂기).
 3. 리모콘을 페어링 모드로 두고 **K1을 짧게 누르기** (5초 스캔 → 가장 가까운 HID 장치와 페어링), 또는 USB 드라이브의 `DongleConfig.exe` → 장치 탭 → 스캔 → 페어링.
    페어링된 장치는 저장되어 이후엔 꽂기만 하면 자동 재연결 (끊겨도 계속 재시도). LCD에 상태/장치명 표시.
-4. 매핑 안 된 키는 원래 키 그대로, 자이로/마우스 움직임과 클릭도 그대로 나감. 바꾸려면 exe → 키 매핑 탭 → 버튼 누르기 → 키 선택 → 추가 (자동 저장). 마우스 움직임은 학습에 안 잡힘.
+4. **매핑된 키만 USB로 나감** (매핑 안 된 키, 자이로/마우스 움직임은 전부 무시). exe → 키 매핑 탭 → 버튼 누르기 → 키 선택 → 추가 (자동 저장). 마우스 움직임은 학습에 안 잡힘.
 5. 확인: `python tool\usb_monitor.py watch` (Windows가 실제로 받은 키).
 
 > 빌드는 `dev.ps1 build`로. `idf.py build`만 쓰면 exe 없이(경고 표시) 빈 드라이브로 빌드됨.
@@ -94,7 +94,7 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
 키가 눌리고 뗄 때마다 `key <page:usage> 1|0 [이름]` 출력 (마우스 움직임은 안 나옴) → 그 page:usage를 `map`에 쓰면 됨.
 키 변화가 있었던 리포트는 원본도 `rpt <rid> <hex>`로 출력 (replay.py 녹화용). 응답은 `ok ...` / `err ...`.
 장치 상태가 바뀌면 `evt none|connecting|connected <addr> <name>` (exe가 이걸로 화면 갱신).
-매핑 우선, 매핑 없는 키는 패스스루: 키보드 page(07) → USB 키보드, 컨슈머(0c) → 미디어키, 버튼(09) → 마우스 버튼, 상대 X/Y/휠 → USB 마우스. 벤더 page(ff00+)는 무시.
+매핑된 키만 USB로 나감 (패스스루 없음). 마우스 축과 벤더 page(ff00+)는 키가 아니라 무시.
 동시 입력(코드) 지원. 저장 형식이 바뀌어 예전(rid+hex) 매핑은 무시됨.
 키 이름: [tool/keycodes.json](tool/keycodes.json) (한영 `HanEng`, 한자 `Hanja`, 안드로이드TV `AppHome`/`AppBack`/`Menu*` 포함).
 수정 후 `dev.ps1 build`가 `firmware/main/keycodes.h`, `tool/KeyCodes.cs`를 다시 생성.
@@ -131,9 +131,9 @@ python tool\usb_monitor.py watch
 ## 상태 / 남은 일
 - [x] 툴체인, 펌웨어 빌드, USB composite(HID+CDC+MSC), 키맵 + CDC 명령, 호스트 테스트, PC 스크립트
 - [x] 하드웨어: USB 열거, MSC(J:에 exe), CDC, inject → Windows 키 입력 확인
-- [x] 저장된 장치 1대 자동 재연결, scan/pair/forget, K1 페어링, 패스스루, LCD 상태, exe 장치/매핑 탭
+- [x] 저장된 장치 1대 자동 재연결, scan/pair/forget, K1 페어링, LCD 상태, exe 장치/매핑 탭
 - [ ] **실제 BLE 리모콘으로 미검증** (페어링/본딩/재연결), LCD 방향·오프셋 보정 (`lcd.c` 상단 상수)
 - [x] G20BTS 리모콘: 페어링, 재플래시 후 자동 재연결, Report Map 해석 확인
-- [ ] 주소가 바뀌는(RPA) 장치는 재연결 안 될 수 있음. 마우스 이동은 ±127로 잘림, 컨슈머 패스스루는 한 번에 1개
+- [ ] 주소가 바뀌는(RPA) 장치는 재연결 안 될 수 있음. 미디어키 출력은 한 번에 1개
 - [ ] 원래 펌웨어 백업: `dist\original-flash-16MB.bin` (0x0에 기록하면 복구, gitignore라 이 PC에만 있음)
 - [ ] 실제 제품화 시 자체 VID/PID 필요 (`303A:4007`은 개발용)

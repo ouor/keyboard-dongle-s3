@@ -7,10 +7,9 @@
 #include "../main/keymap.h"
 
 static char last[128], last_key_line[128];
-static int presses, releases, saves, mouse_reports, hw_cmds;
+static int presses, releases, saves, hw_cmds;
 static uint16_t last_usage;
-static uint8_t last_page, mouse_buttons;
-static int8_t mouse_x, mouse_y;
+static uint8_t last_page;
 
 void hw_print(const char *line)
 {
@@ -23,11 +22,6 @@ void hw_key(uint8_t page, uint16_t usage, bool pressed)
 {
     last_page = page, last_usage = usage;
     pressed ? presses++ : releases++;
-}
-void hw_mouse_report(uint8_t b, int8_t x, int8_t y, int8_t w)
-{
-    (void)w;
-    mouse_buttons = b, mouse_x = x, mouse_y = y, mouse_reports++;
 }
 bool hw_save(const km_entry_t *e, int n) { (void)e; saves = n; return true; }
 void hw_dfu(void) {}
@@ -79,62 +73,55 @@ int main(void)
     assert(hp_parse(VENDOR, sizeof(VENDOR), &maps[3]));
     assert(!hp_parse(G20, 5, &(hp_map_t){0}));  // truncated item
     km_set_maps(maps, 4);
-    assert(!REPORT(5, 0x12, 0x34, 0x56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78));
-    assert(presses == 0 && mouse_reports == 0);
 
-    // consumer array, 3-byte report: Back passes through as Back
-    assert(REPORT(1, 0x24, 0x02, 0x00));
-    assert(presses == 1 && last_page == KC_PAGE_CONSUMER && last_usage == 0x224);
-    assert(!strcmp(last_key_line, "key 0c:0224 1 AppBack"));
-    assert(!REPORT(1, 0x24, 0x02, 0x00));  // repeat: nothing new
+    // nothing mapped: keys are reported to the config tool but nothing reaches USB
+    assert(REPORT(1, 0x24, 0x02, 0x00));  // consumer array, 3-byte report
+    assert(!strcmp(last_key_line, "key 0c:0224 1 AppBack") && presses == 0);
+    assert(!REPORT(1, 0x24, 0x02, 0x00));  // repeat: no new event
     assert(REPORT(1, 0x00, 0x00, 0x00));
-    assert(releases == 1 && !strcmp(last_key_line, "key 0c:0224 0 AppBack"));
-
-    // keyboard: arrow passes through, Shift+A is a chord, mapping by usage wins
-    REPORT(11, 0, 0, 0x50, 0, 0, 0, 0, 0);
-    assert(last_page == KC_PAGE_KEYBOARD && last_usage == 0x50);
-    REPORT(11, 0x02, 0, 0x04, 0, 0, 0, 0, 0);  // Left Shift (E1) + A, arrow released
-    assert(presses == 4 && releases == 2);
+    assert(!strcmp(last_key_line, "key 0c:0224 0 AppBack") && releases == 0);
+    REPORT(11, 0x02, 0, 0x04, 0, 0, 0, 0, 0);  // keyboard: Left Shift (E1) + A
+    assert(!strcmp(last_key_line, "key 07:0004 1 A") && presses == 0);
     REPORT(11, 0, 0, 0, 0, 0, 0, 0, 0);
-    assert(releases == 4);
-    cmd("map 7:50 F13");
-    assert(!strcmp(last, "ok 0"));
-    REPORT(11, 0, 0, 0x50, 0, 0, 0, 0, 0);
-    assert(last_usage == 0x68);
-    REPORT(11, 0, 0, 0, 0, 0, 0, 0, 0);
-
-    // mouse: motion alone is not a key (returns false, no key line) and passes through
-    int keys_before = presses;
-    assert(!REPORT(3, 0x00, 0xFE, 0x03, 0x00));
-    assert(mouse_x == -2 && mouse_y == 3 && mouse_buttons == 0 && presses == keys_before);
-    assert(REPORT(3, 0x01, 0x00, 0x00, 0x00));  // OK = left click
-    assert(mouse_buttons == 1 && !strcmp(last_key_line, "key 09:0001 1 Button"));
-    assert(!REPORT(3, 0x01, 0x05, 0x00, 0x00));  // drag: still one key, moving
-    assert(mouse_buttons == 1 && mouse_x == 5);
+    assert(REPORT(3, 0x01, 0x00, 0x00, 0x00));  // OK = mouse button 1
+    assert(!strcmp(last_key_line, "key 09:0001 1 Button"));
+    assert(!REPORT(3, 0x01, 0x05, 0xFE, 0x00));  // motion is never a key
     assert(REPORT(3, 0x00, 0x00, 0x00, 0x00));
-    assert(mouse_buttons == 0);
-    // mapped click -> Enter, cursor keeps moving, no mouse button sent
-    cmd("map 9:1 Enter");
+    assert(!REPORT(0, 0x00, 0xD4, 0x5E, 0x00));  // 12-bit mouse motion
+    assert(!REPORT(5, 0x12, 0x34, 0x56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78));  // vendor data
+    assert(presses == 0 && releases == 0);
+
+    // mapped keys go out, by usage, whatever report layout carries them
+    cmd("map c:224 AppHome");
+    assert(!strcmp(last, "ok 0"));
+    REPORT(1, 0x24, 0x02, 0x00);
+    assert(presses == 1 && last_page == KC_PAGE_CONSUMER && last_usage == 0x223);
+    REPORT(1, 0x00, 0x00, 0x00);
+    assert(releases == 1);
+    cmd("map 7:50 F13");
+    REPORT(11, 0, 0, 0x50, 0x04, 0, 0, 0, 0);  // mapped arrow + unmapped A: only F13
+    assert(presses == 2 && last_usage == 0x68);
+    REPORT(11, 0, 0, 0, 0, 0, 0, 0, 0);
+    assert(releases == 2);
+    cmd("map 9:1 Enter");  // mapped click works while the cursor moves
     REPORT(3, 0x01, 0x04, 0x00, 0x00);
-    assert(last_usage == 0x28 && mouse_buttons == 0 && mouse_x == 4);
+    assert(presses == 3 && last_usage == 0x28);
+    assert(!REPORT(3, 0x01, 0x09, 0x00, 0x00));
     REPORT(3, 0x00, 0x00, 0x00, 0x00);
-    assert(last_usage == 0x28 && releases == 6);
+    assert(releases == 3);
 
-    // 12-bit mouse (rid 0): X = -300 clamps to -127, Y = 5
-    REPORT(0, 0x00, 0xD4, 0x5E, 0x00);
-    assert(mouse_x == -127 && mouse_y == 5);
-
-    // consumer bitmap: VolumeUp + Home at once, mapped by key name
+    // consumer bitmap: two mapped keys at once (chord), by key name
+    cmd("map VolumeUp F14");
     cmd("map AppHome Esc");
     assert(!strncmp(last, "ok", 2));
-    REPORT(2, 0x41);
-    assert(presses == 8);  // VolumeUp passthrough + Home -> Escape
-    REPORT(2, 0x40);       // VolumeUp released, Home still down
-    assert(releases == 7);
-    km_release_all();      // disconnect releases Home
-    assert(releases == 8 && last_usage == 0x29);
+    REPORT(2, 0x41);  // VolumeUp + Home
+    assert(presses == 5);
+    REPORT(2, 0x40);  // VolumeUp released, Home still down
+    assert(releases == 4);
+    km_release_all();  // disconnect releases Home
+    assert(releases == 5 && last_usage == 0x29);
     km_release_all();
-    assert(releases == 8);
+    assert(releases == 5);
 
     // unknown report id / no device: ignored
     assert(!REPORT(9, 0x01));
@@ -142,25 +129,25 @@ int main(void)
     assert(!REPORT(1, 0x24, 0x02, 0x00));
     km_set_maps(maps, 4);
     cmd("inject 1 240200");
-    assert(!strcmp(last, "ok") && last_usage == 0x224);
+    assert(!strcmp(last, "ok") && last_usage == 0x223);
     cmd("inject 1 000000");
 
     // commands
     cmd("list");
-    assert(!strcmp(last, "ok 3"));
+    assert(!strcmp(last, "ok 5"));
     int n;
     km_entries(&n);
-    assert(n == 3);
+    assert(n == 5);
     cmd("map 9:1 Space");  // same input -> overwrite, not duplicate
     km_entries(&n);
-    assert(n == 3 && !strcmp(last, "ok 1"));
+    assert(n == 5 && !strcmp(last, "ok 2"));
     cmd("hidmap");
     assert(!strncmp(last, "ok ", 3));
     cmd("save");
-    assert(saves == 3);
+    assert(saves == 5);
     cmd("unmap 0");
     km_entries(&n);
-    assert(n == 2 && !strcmp(last, "ok"));
+    assert(n == 4 && !strcmp(last, "ok"));
     cmd("status");
     assert(hw_cmds == 1);
     const char *bad[] = {"map", "map 7:50", "map 7:50 NoSuchKey", "map zz:1 A", "map 7: A", "map NoSuchKey A",
