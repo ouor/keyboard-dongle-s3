@@ -29,3 +29,6 @@ CONFIG_ESP_CONSOLE_SECONDARY_NONE=y
 
 # Crash dump kept in flash -> `dev.ps1 coredump`
 CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
+
+# Reconnect loop retries every ~10s instead of blocking scans for 30s (main.c ble_task)
+CONFIG_BT_BLE_ESTAB_LINK_CONN_TOUT=10

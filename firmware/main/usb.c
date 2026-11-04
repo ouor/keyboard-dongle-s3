@@ -196,7 +196,10 @@ void hw_dfu(void)
     gpio_set_direction(GPIO_NUM_20, GPIO_MODE_OUTPUT_OD);
     gpio_set_level(GPIO_NUM_19, 0);
     gpio_set_level(GPIO_NUM_20, 0);
-    esp_rom_delay_us(100 * 1000);
+    esp_rom_delay_us(100 * 1000);  // D+/D- low: host sees a disconnect
+    gpio_reset_pin(GPIO_NUM_19);
+    gpio_reset_pin(GPIO_NUM_20);
+    SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_USB_PAD_ENABLE);  // pads back to USB-Serial/JTAG, or ROM download mode has no USB
     REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
     esp_restart();
 }
