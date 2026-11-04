@@ -1,145 +1,156 @@
 # esp-dongle
 
-*ESP32-S3 USB stick that maps BLE remote buttons to USB keyboard/media keys; config tool ships on the stick's own USB drive.*
+*ESP32-S3 USB stick that maps BLE remote buttons to USB keyboard/media keys; the config tool ships on the stick's own USB drive.*
 
-ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리모콘 등)를 받아 USB HID 입력으로 매핑.
-스틱의 USB 드라이브(MSC)에 설정용 `DongleConfig.exe`가 들어 있고, 이 exe가 USB 시리얼(CDC)로 키맵을 설정.
+<p align="center"><img src="docs/dongle-s3-0.96.jpg" alt="dongle-s3-0.96 ESP32-S3 USB 스틱 (케이스 / 기판)" width="360"></p>
 
+블루투스(BLE) 리모콘이나 키보드의 버튼을 **원하는 키로 바꿔서** USB 키보드 입력으로 내보내는 USB 스틱.
+PC에서 한 번 설정해 두면 Windows, 안드로이드 등 USB 키보드를 인식하는 곳이면 어디에 꽂아도 그대로 동작합니다.
+
+- 예: 안드로이드TV 리모콘의 "뒤로" → `Home`, OK 버튼 → `Enter`, 음성 버튼 → `F13` 등
+- 호스트에는 드라이버나 앱 설치가 필요 없음. 스틱은 그냥 일반 USB 키보드로 보임
+- 설정 프로그램(`DongleConfig.exe`)이 **스틱 안의 USB 드라이브에 들어 있음**. 따로 받을 필요 없음
+
+## 무엇을 할 수 있나
+| | |
+|---|---|
+| 🔌 꽂으면 바로 동작 | 페어링해 둔 장치에 자동 재연결 (끊겨도 계속 재시도) |
+| 🎯 버튼 → 키 매핑 | 버튼 하나 → 키 하나. 키보드 키, 미디어/앱 키(홈, 뒤로, 볼륨 등) 지원. 동시 입력 가능 |
+| 🔇 매핑한 키만 출력 | 매핑 안 된 버튼, 자이로 마우스 움직임은 PC로 **아무것도 보내지 않음** |
+| 🧩 장치 종류 무관 | 장치의 HID Report Map을 읽어서 해석. 장치별 코드 없이 BLE HID 장치 대부분 지원 |
+| 🖥️ 상태 표시 | 0.96" LCD에 연결 상태와 장치 이름 |
+| 🔘 버튼 하나로 페어링 | K1을 누르면 근처 장치를 찾아 가장 가까운 장치와 페어링 |
+
+## 지원 장치
+- ✅ **BLE HID 장치**: 안드로이드TV 블루투스 리모콘, BLE 키보드, BLE 셀카 리모콘 등.
+  확인한 장치: G20BTS 리모콘 (자이로 마우스 포함)
+- ❌ **블루투스 클래식 장치**: ESP32-S3 칩이 BLE만 지원합니다. Windows "디바이스 추가"에는 보여도 이 스틱에서는 검색되지 않습니다 (예: 셀카 리모콘 Beauty-R1).
+  구분 방법: `python tool\ble_inspect.py scan`에 나오면 BLE.
+- 한 번에 장치 1대만 연결. 새 장치를 페어링하면 이전 장치는 지워집니다.
+
+## 사용법
+### 1. 장치 페어링
+리모콘을 페어링 모드로 둔 뒤 둘 중 하나:
+- 스틱의 **K1 버튼을 짧게 누르기** → 5초 스캔 후 가장 가까운 장치와 페어링
+- 스틱의 USB 드라이브에서 `DongleConfig.exe` 실행 → **장치** 탭 → 스캔 → 목록에서 선택 → 페어링
+
+> 그 리모콘이 PC나 TV에 이미 페어링되어 있으면, 그쪽에서 먼저 제거해야 검색됩니다.
+
+### 2. 키 매핑
+`DongleConfig.exe` → **키 매핑** 탭 → 리모콘 버튼 누르기 → 출력 키 선택 → 추가. 자동으로 스틱에 저장됩니다.
+
+이제 스틱을 TV 박스, 다른 PC 등에 꽂아서 쓰면 됩니다. 설정은 스틱에 남아 있습니다.
+
+### LCD / K1
+| LCD 표시 | 의미 |
+|---|---|
+| No device / Press K1 to pair | 저장된 장치 없음 |
+| Scanning.. | K1 또는 exe로 스캔 중 |
+| Searching.. + 장치 이름 | 저장된 장치에 재연결 시도 중 (리모콘 버튼을 누르면 깨어남) |
+| Connected + 장치 이름 | 연결됨 |
+
+## 하드웨어
+**dongle-s3-0.96** (Pocket-Dongle-S3-0.96)
+- ESP32-S3, 16MB flash, PSRAM 8MB (미사용), 네이티브 USB (GPIO19/20)
+- 0.96" ST7735S LCD 80×160: SCLK 10, MOSI 11, CS 12, DC 13, RST 14
+- 버튼 K1 = GPIO0 (BOOT) · UART0 로그 GPIO43(TX)/44(RX) · TF 슬롯 GPIO15~18, 47, 48
+
+> **처음 플래시하기 전에 원래 펌웨어 백업 권장.** K1을 누른 채 꽂아 다운로드 모드로 들어간 뒤:
+> `python -m esptool --chip esp32s3 -p COMx read-flash 0 0x1000000 dist\original-flash-16MB.bin`
+> (복구: 같은 파일을 0x0에 `write-flash`. `*.bin`은 gitignore 대상)
+
+---
+
+## 개발자용
+
+### 동작 구조
 ```
-[BLE 리모콘] --BLE HID--> [ESP32-S3] --USB composite 303A:4007--> PC
-                                       ├─ CDC  설정 프로토콜 (아래 명령)
+[BLE 리모콘] --BLE HID--> [ESP32-S3] --USB composite 303A:4007--> PC / TV
+                                       ├─ HID  키보드(report 1) + 컨슈머/미디어키(report 2)
                                        ├─ MSC  FAT 1MB, DongleConfig.exe
-                                       └─ HID  키보드(report 1) + 컨슈머/미디어키(report 2)
+                                       └─ CDC  설정 프로토콜 (exe가 사용)
 ```
+BLE 리포트 → Report Map으로 눌린 키(HID `page:usage`) 추출 → 키맵에 있는 것만 USB HID로 출력.
 
-## 디렉터리
-| 경로 | 내용 |
-|---|---|
-| `dev.ps1` | 빌드/플래시/테스트 진입점 (아래 표) |
-| `firmware/main/main.c` | 앱 진입점: 저장된 BLE 장치 재연결, scan/pair/forget, K1 → 리포트를 `keymap`과 CDC로 전달 |
-| `firmware/main/lcd.c` | 0.96" LCD 상태 화면 (연결 상태, 장치명) |
-| `firmware/main/hid_parse.c` | 장치의 Report Map 해석 → 리포트에서 눌린 키(page:usage) 추출. 장치별 레이아웃 무관 |
-| `firmware/main/keymap.c` | 키(page:usage) 매핑 + CDC 명령 처리. 둘 다 ESP 의존 없음 → `firmware/test/`에서 PC로 테스트 |
-| `firmware/main/usb.c` | USB 디스크립터, HID 출력, CDC 입출력, MSC, `dfu` |
-| `firmware/main/keymap_nvs.c` | 키맵 NVS 저장/로드 |
-| `firmware/main/esp_hid_gap.*` | IDF 예제에서 복사한 BLE GAP 헬퍼 (스캔 HID 판별 `adv_is_hid()`만 수정) |
-| `firmware/fatfs_image/` | USB 드라이브에 들어갈 파일 (빌드 시 exe가 생성됨) |
-| `tool/DongleConfig.cs`, `tool/build.ps1` | 스틱에 실리는 설정 exe 소스/빌드 |
-| `tool/keycodes.json` → `gen_keycodes.py` | 키 이름 단일 소스 → `firmware/main/keycodes.h`, `tool/KeyCodes.cs` 생성 (직접 수정 금지) |
-| `tool/*.py`, `tool/clean-usb.ps1` | 개발 PC용 보조 스크립트 (아래) |
+### 빌드 / 플래시
+1. [ESP-IDF v6.1](https://docs.espressif.com/projects/esp-idf/en/v6.1/esp32s3/get-started/windows-setup.html) 설치
+   (`git clone -b v6.1 --recursive https://github.com/espressif/esp-idf` 후 `install.ps1 esp32s3`).
+   기본 위치는 `%USERPROFILE%\esp\esp-idf-v6.1`이고, 다른 곳이면 `$env:IDF_PATH`를 설정합니다.
+2. Python 3.11 + `pip install -r tool/requirements.txt`. 테스트용으로 LLVM clang.
+3. 스틱을 꽂고 `.\dev.ps1 flash`. 처음에 안 잡히면 K1을 누른 채 꽂습니다.
 
-## Quick start
-1. 설치: [ESP-IDF v6.1](https://docs.espressif.com/projects/esp-idf/en/v6.1/esp32s3/get-started/windows-setup.html)
-   (`git clone -b v6.1 --recursive https://github.com/espressif/esp-idf` 후 `install.ps1 esp32s3`),
-   Python 3.11 + `pip install -r tool/requirements.txt`, (테스트용) LLVM clang.
-   ESP-IDF가 `%USERPROFILE%\esp\esp-idf-v6.1`이 아니면 `$env:IDF_PATH` 설정.
-2. 스틱을 꽂고 `.\dev.ps1 flash` (첫 플래시가 안 잡히면 K1/BOOT 누른 채 꽂기).
-3. 리모콘을 페어링 모드로 두고 **K1을 짧게 누르기** (5초 스캔 → 가장 가까운 HID 장치와 페어링), 또는 USB 드라이브의 `DongleConfig.exe` → 장치 탭 → 스캔 → 페어링.
-   페어링된 장치는 저장되어 이후엔 꽂기만 하면 자동 재연결 (끊겨도 계속 재시도). LCD에 상태/장치명 표시.
-4. **매핑된 키만 USB로 나감** (매핑 안 된 키, 자이로/마우스 움직임은 전부 무시). exe → 키 매핑 탭 → 버튼 누르기 → 키 선택 → 추가 (자동 저장). 마우스 움직임은 학습에 안 잡힘.
-5. 확인: `python tool\usb_monitor.py watch` (Windows가 실제로 받은 키).
+> `idf.py build`만 쓰면 exe 없이 빈 드라이브로 빌드됩니다. `dev.ps1 build`를 쓰세요.
 
-> 빌드는 `dev.ps1 build`로. `idf.py build`만 쓰면 exe 없이(경고 표시) 빈 드라이브로 빌드됨.
+`dev.ps1` 명령:
 
-## 보드 (dongle-s3-0.96)
-- ESP32-S3 (QFN56, rev v0.2), **16MB flash**, **PSRAM 8MB 내장** (현재 미사용)
-- 네이티브 USB: GPIO19(D-) / GPIO20(D+)
-- 버튼 K1 = GPIO0 (BOOT) · UART0 헤더 GPIO43(TX)/GPIO44(RX) = 로그
-- 0.96" ST7735S LCD: SCLK 10, MOSI 11, CS 12, DC 13, RST 14, 백라이트 상시 ON
-- TF 슬롯: GPIO15~18, 47, 48
-- 참고 자료: 판매처 제공 패키지(회로도 `ESP32-S3-0.96LCD.pdf`, Arduino/IDF 예제, 원래 펌웨어 `.bin`) — 원래 펌웨어로 복구할 때 필요
-- **처음 플래시하기 전에 원래 펌웨어 백업 권장**: 다운로드 모드(K1 누른 채 꽂기)에서
-  `python -m esptool --chip esp32s3 -p COMx read-flash 0 0x1000000 dist\original-flash-16MB.bin` (복구: 같은 파일을 0x0에 write-flash).
-  `*.bin`은 gitignore라 레포에 올라가지 않음.
-
-> ESP32-S3는 **BLE만** 지원(BT Classic 없음). Windows "디바이스 추가"에 보여도 클래식 장치(예: 셀카 리모컨 Beauty-R1)는 검색·연결 불가.
-> 장치 종류 확인: `python tool\ble_inspect.py scan`에 나오면 BLE, 안 나오면 클래식일 가능성이 큼.
-
-## 개발 환경
-| 항목 | 위치 / 버전 |
-|---|---|
-| ESP-IDF | v6.1, 기본 위치 `%USERPROFILE%\esp\esp-idf-v6.1` (다르면 `IDF_PATH`), 툴체인 `%USERPROFILE%\.espressif` |
-| USB 스택 | `espressif/esp_tinyusb` 3.x (컴포넌트 매니저 자동 다운로드) |
-| BLE HID host | IDF `esp_hid` (Bluedroid), `examples/bluetooth/esp_hid_host` 기반 |
-| 설정 툴 | C# WinForms + Windows 내장 `csc.exe` (.NET Framework 4.x) → 설치 없이 실행되는 ~10KB exe |
-| PC 스크립트 | Python 3.11, `pip install -r tool/requirements.txt` (bleak, pyserial) |
-| 호스트 테스트 | clang (`C:\Program Files\LLVM`) |
-
-## dev.ps1 — 반복 작업 한 줄로
 | 명령 | 하는 일 |
 |---|---|
-| `.\dev.ps1 build` | 키코드 생성 → exe 빌드 → 펌웨어 빌드 |
-| `.\dev.ps1 flash` | build + 플래시. 포트 자동 탐색, 우리 펌웨어가 돌고 있으면 `dfu` 보내서 다운로드 모드로 |
-| `.\dev.ps1 monitor` | 동글 CDC 터미널 (UART 어댑터 쓰면 `-Port COMx`) |
-| `.\dev.ps1 all` | flash + monitor |
-| `.\dev.ps1 test` | `keymap.c` 호스트 유닛 테스트 (ESP 없이) |
-| `.\dev.ps1 ports` | 연결된 ESP32-S3 포트 / PID (1001 = JTAG·다운로드, 4007 = 동글 펌웨어) |
-| `.\dev.ps1 erase-nvs` | BLE 본딩 + 저장된 키맵만 삭제 |
-| `.\dev.ps1 storage` | FAT 파티션(exe)만 다시 쓰기 |
-| `.\dev.ps1 coredump` | 플래시에 저장된 마지막 크래시 분석 |
-| `.\dev.ps1 dist` | `dist\esp-dongle-*.bin` 단일 바이너리 (0x0에 기록, [esptool-js](https://espressif.github.io/esptool-js/) 가능) |
-| `.\dev.ps1 menuconfig` | `idf.py menuconfig` |
+| `build` | 키코드 생성 → exe 빌드 → 펌웨어 빌드 |
+| `flash` | build + 플래시. 포트 자동 탐색, 동글 펌웨어가 돌고 있으면 `dfu`로 다운로드 모드 전환 |
+| `monitor` / `all` | 동글 CDC 터미널 (UART 어댑터면 `-Port COMx`) / flash + monitor |
+| `test` | `keymap.c` + `hid_parse.c` 호스트 유닛 테스트 (ESP 없이) |
+| `ports` | ESP32-S3 포트 / PID (1001 = 다운로드, 4007 = 동글 펌웨어) |
+| `erase-nvs` | BLE 본딩 + 키맵만 삭제 |
+| `storage` | FAT 파티션(exe)만 다시 쓰기 |
+| `coredump` | 마지막 크래시 분석 |
+| `dist` | `dist\esp-dongle-*.bin` 단일 바이너리 (0x0에 기록, [esptool-js](https://espressif.github.io/esptool-js/) 가능) |
+| `menuconfig` | `idf.py menuconfig` |
 
-`dfu`가 안 먹으면(하드웨어 미검증) K1(BOOT)을 누른 채 꽂으면 다운로드 모드.
+### 코드 구성
+| 경로 | 내용 |
+|---|---|
+| `firmware/main/main.c` | 저장 장치 재연결, scan/pair/forget, K1, 리포트 → keymap |
+| `firmware/main/hid_parse.c` | Report Map 해석, 리포트에서 눌린 키(page:usage) 추출 |
+| `firmware/main/keymap.c` | 매핑 + CDC 명령. ESP 의존 없음 → `firmware/test/`에서 PC로 테스트 |
+| `firmware/main/usb.c` | USB 디스크립터, HID 출력, CDC, MSC, `dfu` |
+| `firmware/main/lcd.c` | LCD 상태 화면 |
+| `firmware/main/keymap_nvs.c` | 키맵 NVS 저장/로드 |
+| `firmware/main/esp_hid_gap.*` | IDF 예제의 BLE GAP 헬퍼 (`adv_is_hid()`만 수정) |
+| `tool/DongleConfig.cs`, `tool/build.ps1` | 설정 exe (C# WinForms, Windows 내장 `csc.exe`로 빌드, 설치 불필요) |
+| `tool/keycodes.json` | 키 이름 단일 소스. `gen_keycodes.py`가 `keycodes.h` / `KeyCodes.cs` 생성 |
 
-## CDC 프로토콜 (줄 단위, DTR 켜야 응답 — USB CDC라 baud는 아무 값이나 무관)
+### CDC 프로토콜
+줄 단위 텍스트, DTR을 켜야 응답합니다. USB CDC라 baud 값은 무관합니다. 응답은 `ok ...` 또는 `err ...`.
+
 | 명령 | 동작 |
 |---|---|
-| `help` / `ver` / `keys` | 명령 목록 / 펌웨어 버전 (`firmware/main/version.h`) / 키 이름 전체 |
-| `list` | 현재 매핑 출력. 각 줄 형식: `map <i> <page:usage> <출력키> [입력키 이름]` |
-| `map <page:usage\|키이름> <key>` | 리모콘 키(HID usage, hex) → 키. 예: `map c:224 AppHome` (뒤로→홈), `map 9:1 Enter` (OK 클릭→Enter), `map AppBack AppHome` |
-| `unmap <i>` / `clear` / `save` | 삭제 / 전부 삭제 / NVS에 저장 (재부팅 후 유지) |
-| `inject <rid> <hex>` | BLE 리포트를 받은 것처럼 처리 (리플레이/테스트용, 연결된 장치의 Report Map으로 해석) |
-| `hidmap` | 연결된 장치의 Report Map 해석 결과: `field <map> rid <id> <page:usage> bit <b> size <s> count <c> array\|var [rel]` |
+| `help` / `ver` / `keys` | 명령 목록 / 펌웨어 버전 / 키 이름 전체 |
+| `list` | 매핑 목록: `map <i> <page:usage> <출력키> [입력키 이름]` |
+| `map <page:usage\|키이름> <key>` | 매핑 추가. 예: `map c:224 AppHome`, `map 9:1 Enter`, `map AppBack AppHome` |
+| `unmap <i>` / `clear` / `save` | 삭제 / 전부 삭제 / NVS 저장 |
 | `status` | `ok none\|connecting\|connected <addr> <name>` |
-| `scan [초]` | `ok` 후 `dev <addr> <addr_type> <rssi> <name>` 줄들, 끝나면 `evt scan end <n>` (재연결 시도 중이면 최대 10초 늦게 시작) |
-| `pair <addr> <addr_type>` / `forget` | 그 장치로 교체 / 장치 삭제. 둘 다 기존 본딩을 지움 (장치 1대만 유지) |
+| `scan [초]` | `dev <addr> <addr_type> <rssi> <name>` 줄들 → `evt scan end <n>` |
+| `pair <addr> <addr_type>` / `forget` | 장치 교체 / 삭제 (기존 본딩 삭제) |
+| `hidmap` | 연결 장치의 Report Map 해석 결과 |
+| `inject <rid> <hex>` | BLE 리포트를 받은 것처럼 처리 (테스트/리플레이) |
 | `dfu` | 다운로드 모드로 재부팅 |
-키가 눌리고 뗄 때마다 `key <page:usage> 1|0 [이름]` 출력 (마우스 움직임은 안 나옴) → 그 page:usage를 `map`에 쓰면 됨.
-키 변화가 있었던 리포트는 원본도 `rpt <rid> <hex>`로 출력 (replay.py 녹화용). 응답은 `ok ...` / `err ...`.
-장치 상태가 바뀌면 `evt none|connecting|connected <addr> <name>` (exe가 이걸로 화면 갱신).
-매핑된 키만 USB로 나감 (패스스루 없음). 마우스 축과 벤더 page(ff00+)는 키가 아니라 무시.
-동시 입력(코드) 지원. 저장 형식이 바뀌어 예전(rid+hex) 매핑은 무시됨.
-키 이름: [tool/keycodes.json](tool/keycodes.json) (한영 `HanEng`, 한자 `Hanja`, 안드로이드TV `AppHome`/`AppBack`/`Menu*` 포함).
-수정 후 `dev.ps1 build`가 `firmware/main/keycodes.h`, `tool/KeyCodes.cs`를 다시 생성.
 
-## PC 스크립트 (tool/)
+이벤트 줄:
+- 버튼을 누르거나 뗄 때 `key <page:usage> 1|0 [이름]`. 이 page:usage를 `map`에 쓰면 됩니다.
+- 그 리포트의 원본은 `rpt <rid> <hex>`.
+- 연결 상태가 바뀌면 `evt none|connecting|connected ...`.
+
+키 이름 목록은 [tool/keycodes.json](tool/keycodes.json)에 있습니다. 한영 `HanEng`, 한자 `Hanja`, 안드로이드TV `AppHome`/`AppBack`/`Menu*` 등이 포함됩니다.
+
+### PC 보조 스크립트 (tool/)
 ```powershell
-# BLE: 장치/서비스/디스크립터/Report Map, 버튼 리포트 실시간 + 녹화
-python tool\ble_inspect.py scan -t 8 -n remote
+python tool\ble_inspect.py scan -t 8                  # 주변 BLE 장치
 python tool\ble_inspect.py inspect AA:BB:CC:DD:EE:FF --pair --listen 30 --record remote.jsonl
-python tool\ble_inspect.py selftest                 # Report Map 디코더 자체 테스트
-
-# 녹화/리플레이: 리모콘 없이 매핑 테스트
-python tool\replay.py record remote.jsonl          # 동글이 출력하는 rpt 줄 녹화
-python tool\replay.py play remote.jsonl --speed 2  # inject로 재생
-python tool\replay.py send "map 3 2302 AppHome"    # 명령 1회 (포트 지정: ... send "ver" --port COM7)
-
-# USB 출력 확인: Windows가 실제로 받은 키 (Raw Input, 키보드도 동글 것만 구분)
-python tool\usb_monitor.py list
-python tool\usb_monitor.py watch
-
-# 디스크립터 바꾼 뒤 장치가 이상하게 잡힐 때: 남은 303A 유령 장치 정리 (관리자)
-.\tool\clean-usb.ps1            # 목록만
-.\tool\clean-usb.ps1 -Remove
+python tool\replay.py play remote.jsonl --speed 2     # 리모콘 없이 녹화 재생 (inject)
+python tool\replay.py send "ver"                      # 명령 1회
+python tool\usb_monitor.py watch                      # Windows가 실제로 받은 키
+.\tool\clean-usb.ps1 -Remove                          # 303A 유령 장치 정리 (관리자)
 ```
-- Windows 설정에서 이미 페어링된 리모콘은 Windows가 HID 서비스를 점유해서 `ble_inspect`에 안 보임 → 설정에서 제거 후 `--pair`.
-- USB 디스크립터를 바꾸면 `firmware/main/usb.c`의 `USB_BCD`도 올릴 것 (Windows 캐시 회피).
+- USB 디스크립터를 바꾸면 `firmware/main/usb.c`의 `USB_BCD`도 올려야 합니다 (Windows 캐시 회피).
+- 디버깅 도구: Wireshark + USBPcap, Microsoft BTVS, nRF Connect (휴대폰), USB Device Tree Viewer.
 
-## 외부 툴 (필요할 때 설치)
-- Wireshark + USBPcap: `winget install WiresharkFoundation.Wireshark` (설치 중 USBPcap 체크) — HID 패킷 확인
-- Microsoft BTVS (Bluetooth Virtual Sniffer, Windows 11): PC 블루투스 HCI를 Wireshark로 — 페어링 디버깅
-- nRF Connect (휴대폰): 리모콘 서비스 확인
-- USB Device Tree Viewer (uwe-sieber.de): USB 디스크립터 GUI
-
-## 상태 / 남은 일
-- [x] 툴체인, 펌웨어 빌드, USB composite(HID+CDC+MSC), 키맵 + CDC 명령, 호스트 테스트, PC 스크립트
-- [x] 하드웨어: USB 열거, MSC(J:에 exe), CDC, inject → Windows 키 입력 확인
-- [x] 저장된 장치 1대 자동 재연결, scan/pair/forget, K1 페어링, LCD 상태, exe 장치/매핑 탭
-- [ ] **실제 BLE 리모콘으로 미검증** (페어링/본딩/재연결), LCD 방향·오프셋 보정 (`lcd.c` 상단 상수)
-- [x] G20BTS 리모콘: 페어링, 재플래시 후 자동 재연결, Report Map 해석 확인
-- [ ] 주소가 바뀌는(RPA) 장치는 재연결 안 될 수 있음. 미디어키 출력은 한 번에 1개
-- [ ] 실제 제품화 시 자체 VID/PID 필요 (`303A:4007`은 개발용)
+## 한계 / 남은 일
+- 블루투스 클래식 미지원 (하드웨어 한계)
+- 주소가 바뀌는(RPA) 장치는 재연결이 안 될 수 있음
+- 미디어키 출력은 한 번에 1개
+- 버튼 하나 → 키 하나만 지원 (매크로, 조합 출력 없음)
+- VID/PID `303A:4007`은 개발용. 배포하려면 자체 ID가 필요
 
 ## 라이선스
-MIT ([LICENSE](LICENSE)). `firmware/main/esp_hid_gap.*`는 ESP-IDF 예제에서 가져온 코드로 원래 라이선스(Unlicense OR CC0-1.0)를 따름.
+MIT ([LICENSE](LICENSE)). `firmware/main/esp_hid_gap.*`는 ESP-IDF 예제 코드로 원래 라이선스(Unlicense OR CC0-1.0)를 따릅니다.
+보드 사진은 판매처 제품 사진입니다.
