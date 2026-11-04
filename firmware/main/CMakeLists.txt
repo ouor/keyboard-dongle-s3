@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c" "esp_hid_gap.c" "keymap.c" "keymap_nvs.c" "lcd.c" "usb.c"
+idf_component_register(SRCS "main.c" "esp_hid_gap.c" "keymap.c" "hid_parse.c" "keymap_nvs.c" "lcd.c" "usb.c"
                        INCLUDE_DIRS "."
                        REQUIRES esp_hid
                        PRIV_REQUIRES nvs_flash fatfs wear_levelling esp_partition esp_driver_gpio esp_driver_spi esp_lcd espcoredump)

@@ -21,12 +21,12 @@ class DongleConfig : Form
     readonly ListView found = NewList("이름", 200, "주소", 130, "RSSI", 60, "type", 0);
 
     // mapping tab
-    readonly ListView maps = NewList("#", 40, "Report ID", 80, "리포트", 150, "출력 키", 140);
+    readonly ListView maps = NewList("#", 40, "입력 키", 140, "코드", 90, "출력 키", 140);
     readonly Label captured = new Label { AutoSize = true, Text = "리모콘 버튼을 누르세요", Font = new Font("Consolas", 10f), Padding = new Padding(0, 6, 0, 0) };
     readonly ComboBox key = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 140 };
     readonly Button apply = new Button { Text = "매핑 추가/변경", AutoSize = true, Enabled = false };
     readonly Button remove = new Button { Text = "선택 매핑 삭제", AutoSize = true };
-    string capRid, capHex;
+    string capKey;  // last key pressed on the remote, "page:usage"
 
     // log tab
     readonly TextBox log = new TextBox { Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, Dock = DockStyle.Fill, Font = new Font("Consolas", 9) };
@@ -60,7 +60,7 @@ class DongleConfig : Form
         var mapTab = new TabPage("키 매핑");
         key.Items.AddRange(KeyCodes.Names);  // generated from tool/keycodes.json
         mapTab.Controls.Add(maps);
-        mapTab.Controls.Add(Row(remove, new Label { AutoSize = true, Padding = new Padding(0, 6, 0, 0), Text = "매핑 안 된 버튼은 원래 키 그대로 나갑니다" }));
+        mapTab.Controls.Add(Row(remove, new Label { AutoSize = true, Padding = new Padding(0, 6, 0, 0), Text = "매핑 안 된 키는 원래 키 그대로, 마우스 움직임은 그대로 나갑니다" }));
         mapTab.Controls.Add(Row(new Label { AutoSize = true, Text = "입력:", Padding = new Padding(0, 6, 0, 0) }, captured, new Label { AutoSize = true, Text = "→", Padding = new Padding(0, 6, 0, 0) }, key, apply));
 
         var logTab = new TabPage("로그");
@@ -82,8 +82,8 @@ class DongleConfig : Form
         {
             if (MessageBox.Show("현재 장치의 페어링을 지울까요?", Text, MessageBoxButtons.OKCancel) == DialogResult.OK) Send("forget");
         };
-        key.SelectedIndexChanged += (s, e) => apply.Enabled = capHex != null;
-        apply.Click += (s, e) => { Send("map " + capRid + " " + capHex + " " + key.SelectedItem); Send("save"); Send("list"); };
+        key.SelectedIndexChanged += (s, e) => apply.Enabled = capKey != null;
+        apply.Click += (s, e) => { Send("map " + capKey + " " + key.SelectedItem); Send("save"); Send("list"); };
         remove.Click += (s, e) =>
         {
             if (maps.SelectedItems.Count == 0) return;
@@ -175,17 +175,16 @@ class DongleConfig : Form
         {
             found.Items.Add(new ListViewItem(new[] { w.Length > 4 ? w[4] : "(이름 없음)", w[1], w[3], w[2] }));
         }
-        else if (w[0] == "map" && w.Length >= 5)
+        else if (w[0] == "map" && w.Length >= 4)  // map <i> <page:usage> <out key> [input name]
         {
-            maps.Items.Add(new ListViewItem(new[] { w[1], w[2], w[3], w[4] }));
+            maps.Items.Add(new ListViewItem(new[] { w[1], w.Length > 4 ? w[4] : "", w[2], w[3] }));
         }
-        else if (w[0] == "rpt" && w.Length >= 3 && w[2].Trim('0') != "")  // all-zero = button released
+        else if (w[0] == "key" && w.Length >= 3 && w[2] == "1")  // key <page:usage> 1 [name]: a key went down (never mouse motion)
         {
-            capRid = w[1];
-            capHex = w[2];
-            captured.Text = "ID " + capRid + " / " + capHex;
+            capKey = w[1];
+            captured.Text = (w.Length > 3 && w[3] != "" ? w[3] + " " : "") + "(" + capKey + ")";
             apply.Enabled = key.SelectedItem != null;
-            foreach (ListViewItem it in maps.Items) it.Selected = it.SubItems[1].Text == capRid && it.SubItems[2].Text == capHex;
+            foreach (ListViewItem it in maps.Items) it.Selected = it.SubItems[2].Text == capKey;
         }
     }
 

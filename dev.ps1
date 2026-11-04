@@ -92,7 +92,7 @@ switch ($Cmd) {
     'all' { & $PSCommandPath flash -Port $Port; Start-Sleep 3; & $PSCommandPath monitor }
     'test' {
         New-Item -ItemType Directory -Force "$Fw\build-host" | Out-Null
-        Invoke-Checked clang -std=c11 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS "$Fw\test\test_keymap.c" "$Fw\main\keymap.c" -o "$Fw\build-host\test_keymap.exe"
+        Invoke-Checked clang -std=c11 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS "$Fw\test\test_keymap.c" "$Fw\main\keymap.c" "$Fw\main\hid_parse.c" -o "$Fw\build-host\test_keymap.exe"
         Invoke-Checked "$Fw\build-host\test_keymap.exe"
     }
     'ports' { Get-EspPorts | Format-Table Port, Pid, Name }

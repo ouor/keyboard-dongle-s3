@@ -1,4 +1,4 @@
-// Host test for keymap.c: dev.ps1 test (clang). No ESP-IDF needed.
+// Host test for hid_parse.c + keymap.c: dev.ps1 test (clang). No ESP-IDF needed.
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,26 +6,31 @@
 #include "../main/keycodes.h"
 #include "../main/keymap.h"
 
-static char last[128];
-static int presses, releases, saves;
+static char last[128], last_key_line[128];
+static int presses, releases, saves, mouse_reports, hw_cmds;
 static uint16_t last_usage;
-static uint8_t last_page;
+static uint8_t last_page, mouse_buttons;
+static int8_t mouse_x, mouse_y;
 
-void hw_print(const char *line) { snprintf(last, sizeof(last), "%s", line); }
+void hw_print(const char *line)
+{
+    snprintf(last, sizeof(last), "%s", line);
+    if (!strncmp(line, "key ", 4)) {
+        snprintf(last_key_line, sizeof(last_key_line), "%s", line);
+    }
+}
 void hw_key(uint8_t page, uint16_t usage, bool pressed)
 {
     last_page = page, last_usage = usage;
     pressed ? presses++ : releases++;
 }
+void hw_mouse_report(uint8_t b, int8_t x, int8_t y, int8_t w)
+{
+    (void)w;
+    mouse_buttons = b, mouse_x = x, mouse_y = y, mouse_reports++;
+}
 bool hw_save(const km_entry_t *e, int n) { (void)e; saves = n; return true; }
 void hw_dfu(void) {}
-static uint8_t kbd_mods, kbd_keys[6];
-static int kbd_reports;
-void hw_kbd_report(uint8_t mods, const uint8_t keys[6])
-{
-    kbd_mods = mods, memcpy(kbd_keys, keys, 6), kbd_reports++;
-}
-static int hw_cmds;
 bool hw_cmd(int argc, char **argv) { (void)argc; return !strcmp(argv[0], "status") && ++hw_cmds; }
 
 static void cmd(const char *s)
@@ -35,93 +40,138 @@ static void cmd(const char *s)
     km_cmd(buf);
 }
 
+// Shaped like the G20BTS remote: rid 1 consumer (16-bit array + pad = 3 bytes), rid 11 keyboard, rid 3 mouse.
+static const uint8_t G20[] = {
+    0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, 0x01, 0x15, 0x00, 0x26, 0xFF, 0x03, 0x19, 0x00, 0x2A, 0xFF, 0x03,
+    0x75, 0x10, 0x95, 0x01, 0x81, 0x00, 0x75, 0x08, 0x95, 0x01, 0x81, 0x01, 0xC0,
+    0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, 0x0B, 0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00, 0x25, 0x01,
+    0x75, 0x01, 0x95, 0x08, 0x81, 0x02, 0x95, 0x01, 0x75, 0x08, 0x81, 0x01, 0x95, 0x06, 0x75, 0x08, 0x15, 0x00,
+    0x25, 0x65, 0x19, 0x00, 0x29, 0x65, 0x81, 0x00, 0x95, 0x05, 0x75, 0x01, 0x91, 0x02, 0xC0,
+    0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x85, 0x03, 0x09, 0x01, 0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x03,
+    0x15, 0x00, 0x25, 0x01, 0x95, 0x03, 0x75, 0x01, 0x81, 0x02, 0x95, 0x01, 0x75, 0x05, 0x81, 0x01,
+    0x05, 0x01, 0x09, 0x30, 0x09, 0x31, 0x09, 0x38, 0x15, 0x81, 0x25, 0x7F, 0x75, 0x08, 0x95, 0x03, 0x81, 0x06, 0xC0, 0xC0,
+};
+// Mouse without report ID: 5 buttons + pad, 12-bit X/Y.
+static const uint8_t MOUSE12[] = {
+    0x05, 0x01, 0x09, 0x02, 0xA1, 0x01, 0x09, 0x01, 0xA1, 0x00, 0x05, 0x09, 0x19, 0x01, 0x29, 0x05, 0x15, 0x00,
+    0x25, 0x01, 0x95, 0x05, 0x75, 0x01, 0x81, 0x02, 0x95, 0x01, 0x75, 0x03, 0x81, 0x01, 0x05, 0x01, 0x09, 0x30,
+    0x09, 0x31, 0x16, 0x01, 0xF8, 0x26, 0xFF, 0x07, 0x75, 0x0C, 0x95, 0x02, 0x81, 0x06, 0xC0, 0xC0,
+};
+// Consumer bitmap: one bit per key (VolUp, VolDown, Mute, Play, Next, Prev, Home, Back).
+static const uint8_t CC_BITS[] = {
+    0x05, 0x0C, 0x09, 0x01, 0xA1, 0x01, 0x85, 0x02, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x09, 0xE9,
+    0x09, 0xEA, 0x09, 0xE2, 0x09, 0xCD, 0x09, 0xB5, 0x09, 0xB6, 0x0A, 0x23, 0x02, 0x0A, 0x24, 0x02, 0x81, 0x02, 0xC0,
+};
+
+// Vendor report like the G20BTS rid 2 (page ff01, 20 bytes, probably voice): never a key.
+static const uint8_t VENDOR[] = {0x06, 0x01, 0xFF, 0x09, 0x01, 0xA1, 0x01, 0x85, 0x05, 0x09, 0x14, 0x15, 0x00, 0x26, 0xFF, 0x00,
+                                 0x75, 0x08, 0x95, 0x14, 0x81, 0x02, 0xC0};
+
+static hp_map_t maps[4];
+
+#define REPORT(rid, ...) km_on_report(rid, (const uint8_t[]){__VA_ARGS__}, sizeof((const uint8_t[]){__VA_ARGS__}))
+
 int main(void)
 {
-    cmd("map 3 2302 AppHome");  // consumer report from a remote: rid 3, usage 0x0223 LE
+    assert(hp_parse(G20, sizeof(G20), &maps[0]));
+    assert(hp_parse(MOUSE12, sizeof(MOUSE12), &maps[1]));
+    assert(hp_parse(CC_BITS, sizeof(CC_BITS), &maps[2]));
+    assert(hp_parse(VENDOR, sizeof(VENDOR), &maps[3]));
+    assert(!hp_parse(G20, 5, &(hp_map_t){0}));  // truncated item
+    km_set_maps(maps, 4);
+    assert(!REPORT(5, 0x12, 0x34, 0x56, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x78));
+    assert(presses == 0 && mouse_reports == 0);
+
+    // consumer array, 3-byte report: Back passes through as Back
+    assert(REPORT(1, 0x24, 0x02, 0x00));
+    assert(presses == 1 && last_page == KC_PAGE_CONSUMER && last_usage == 0x224);
+    assert(!strcmp(last_key_line, "key 0c:0224 1 AppBack"));
+    assert(!REPORT(1, 0x24, 0x02, 0x00));  // repeat: nothing new
+    assert(REPORT(1, 0x00, 0x00, 0x00));
+    assert(releases == 1 && !strcmp(last_key_line, "key 0c:0224 0 AppBack"));
+
+    // keyboard: arrow passes through, Shift+A is a chord, mapping by usage wins
+    REPORT(11, 0, 0, 0x50, 0, 0, 0, 0, 0);
+    assert(last_page == KC_PAGE_KEYBOARD && last_usage == 0x50);
+    REPORT(11, 0x02, 0, 0x04, 0, 0, 0, 0, 0);  // Left Shift (E1) + A, arrow released
+    assert(presses == 4 && releases == 2);
+    REPORT(11, 0, 0, 0, 0, 0, 0, 0, 0);
+    assert(releases == 4);
+    cmd("map 7:50 F13");
     assert(!strcmp(last, "ok 0"));
-    cmd("map 3 2402 appback");   // case-insensitive key names
-    assert(!strcmp(last, "ok 1"));
-    cmd("map 3 2302 VolumeUp");  // same report -> overwrite, not duplicate
-    assert(!strcmp(last, "ok 0"));
+    REPORT(11, 0, 0, 0x50, 0, 0, 0, 0, 0);
+    assert(last_usage == 0x68);
+    REPORT(11, 0, 0, 0, 0, 0, 0, 0, 0);
+
+    // mouse: motion alone is not a key (returns false, no key line) and passes through
+    int keys_before = presses;
+    assert(!REPORT(3, 0x00, 0xFE, 0x03, 0x00));
+    assert(mouse_x == -2 && mouse_y == 3 && mouse_buttons == 0 && presses == keys_before);
+    assert(REPORT(3, 0x01, 0x00, 0x00, 0x00));  // OK = left click
+    assert(mouse_buttons == 1 && !strcmp(last_key_line, "key 09:0001 1 Button"));
+    assert(!REPORT(3, 0x01, 0x05, 0x00, 0x00));  // drag: still one key, moving
+    assert(mouse_buttons == 1 && mouse_x == 5);
+    assert(REPORT(3, 0x00, 0x00, 0x00, 0x00));
+    assert(mouse_buttons == 0);
+    // mapped click -> Enter, cursor keeps moving, no mouse button sent
+    cmd("map 9:1 Enter");
+    REPORT(3, 0x01, 0x04, 0x00, 0x00);
+    assert(last_usage == 0x28 && mouse_buttons == 0 && mouse_x == 4);
+    REPORT(3, 0x00, 0x00, 0x00, 0x00);
+    assert(last_usage == 0x28 && releases == 6);
+
+    // 12-bit mouse (rid 0): X = -300 clamps to -127, Y = 5
+    REPORT(0, 0x00, 0xD4, 0x5E, 0x00);
+    assert(mouse_x == -127 && mouse_y == 5);
+
+    // consumer bitmap: VolumeUp + Home at once, mapped by key name
+    cmd("map AppHome Esc");
+    assert(!strncmp(last, "ok", 2));
+    REPORT(2, 0x41);
+    assert(presses == 8);  // VolumeUp passthrough + Home -> Escape
+    REPORT(2, 0x40);       // VolumeUp released, Home still down
+    assert(releases == 7);
+    km_release_all();      // disconnect releases Home
+    assert(releases == 8 && last_usage == 0x29);
+    km_release_all();
+    assert(releases == 8);
+
+    // unknown report id / no device: ignored
+    assert(!REPORT(9, 0x01));
+    km_set_maps(NULL, 0);
+    assert(!REPORT(1, 0x24, 0x02, 0x00));
+    km_set_maps(maps, 4);
+    cmd("inject 1 240200");
+    assert(!strcmp(last, "ok") && last_usage == 0x224);
+    cmd("inject 1 000000");
+
+    // commands
+    cmd("list");
+    assert(!strcmp(last, "ok 3"));
     int n;
     km_entries(&n);
-    assert(n == 2);
-
-    // press -> repeat -> release
-    km_on_report(3, (const uint8_t[]){0x23, 0x02}, 2, KM_SRC_OTHER);
-    assert(presses == 1 && last_page == KC_PAGE_CONSUMER && last_usage == 0xE9);
-    km_on_report(3, (const uint8_t[]){0x23, 0x02}, 2, KM_SRC_OTHER);
-    assert(presses == 1);
-    km_on_report(3, (const uint8_t[]){0x00, 0x00}, 2, KM_SRC_OTHER);
-    assert(releases == 1);
-
-    // switching directly between buttons releases the first
-    cmd("inject 3 2302");
-    cmd("inject 3 24:02");
-    assert(presses == 3 && releases == 2 && last_usage == 0x224);
-    cmd("clear");  // clearing while held must release
-    assert(releases == 3 && !strcmp(last, "ok"));
-
-    // bad input
-    cmd("map 3 zz A");
-    assert(!strncmp(last, "err", 3));
-    cmd("map 3 123 A");  // odd nibble count
-    assert(!strncmp(last, "err", 3));
-    cmd("map 256 01 A");
-    assert(!strncmp(last, "err", 3));
-    cmd("map 1 01 NoSuchKey");
-    assert(!strncmp(last, "err", 3));
-    cmd("map 1 010203040506070809 A");  // longer than KM_MAX_DATA
-    assert(!strncmp(last, "err", 3));
-    cmd("unmap 5");
-    assert(!strncmp(last, "err", 3));
-    cmd("bogus");
-    assert(!strncmp(last, "err", 3));
-
-    cmd("map 1 0000040000000000 Enter");
+    assert(n == 3);
+    cmd("map 9:1 Space");  // same input -> overwrite, not duplicate
+    km_entries(&n);
+    assert(n == 3 && !strcmp(last, "ok 1"));
+    cmd("hidmap");
+    assert(!strncmp(last, "ok ", 3));
+    cmd("save");
+    assert(saves == 3);
     cmd("unmap 0");
     km_entries(&n);
-    assert(n == 0 && !strcmp(last, "ok"));
-    cmd("map 1 01 A");
-    cmd("save");
-    assert(saves == 1);
-
-    // unmapped reports do nothing
-    int p = presses;
-    km_on_report(9, (const uint8_t[]){0x01}, 1, KM_SRC_OTHER);
-    assert(presses == p);
-
-    // platform commands go to hw_cmd, unknown ones still error
+    assert(n == 2 && !strcmp(last, "ok"));
     cmd("status");
     assert(hw_cmds == 1);
-
-    // unmapped keyboard report passes through, mapped one wins and clears the passthrough
+    const char *bad[] = {"map", "map 7:50", "map 7:50 NoSuchKey", "map zz:1 A", "map 7: A", "map NoSuchKey A",
+                         "unmap 5", "unmap x", "inject 1 zz", "inject 300 00", "bogus"};
+    for (size_t i = 0; i < sizeof(bad) / sizeof(bad[0]); i++) {
+        cmd(bad[i]);
+        assert(!strncmp(last, "err", 3));
+    }
     cmd("clear");
-    cmd("map 1 0000050000000000 F13");  // 'B' on a BLE keyboard -> F13
-    km_on_report(1, (const uint8_t[]){0x02, 0, 0x04, 0, 0, 0, 0, 0}, 8, KM_SRC_KEYBOARD);  // Shift+A
-    assert(kbd_reports == 1 && kbd_mods == 0x02 && kbd_keys[0] == 0x04);
-    p = presses;
-    km_on_report(1, (const uint8_t[]){0, 0, 0x05, 0, 0, 0, 0, 0}, 8, KM_SRC_KEYBOARD);
-    assert(kbd_reports == 2 && kbd_mods == 0 && kbd_keys[0] == 0 && presses == p + 1 && last_usage == 0x68);
-    km_on_report(1, (const uint8_t[]){0, 0, 0, 0, 0, 0, 0, 0}, 8, KM_SRC_KEYBOARD);
-    assert(releases == 4 && kbd_reports == 3);
-    // keyboard layout only for keyboard reports
-    km_on_report(1, (const uint8_t[]){0, 0, 0x04, 0, 0, 0, 0, 0}, 8, KM_SRC_OTHER);
-    assert(kbd_reports == 3);
-
-    // unmapped consumer report passes through as its usage; release-all lets it go
-    km_on_report(3, (const uint8_t[]){0xE9, 0x00}, 2, KM_SRC_CONSUMER);
-    assert(last_page == KC_PAGE_CONSUMER && last_usage == 0xE9 && presses == p + 2);
-    km_release_all();
-    assert(releases == 5);
-    km_release_all();  // nothing held -> nothing sent
-    assert(releases == 5);
-    cmd("inject 3 e900 cc");
-    assert(presses == p + 3);
-    cmd("inject 3 0000 cc");
-    assert(releases == 6);
-    cmd("inject 3 0000 xx");
-    assert(!strncmp(last, "err", 3));
+    km_entries(&n);
+    assert(n == 0);
 
     puts("keymap tests ok");
     return 0;

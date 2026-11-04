@@ -26,15 +26,16 @@ static const char *TAG = "usb";
 // Bump USB_BCD whenever descriptors change, otherwise Windows may keep the old cached interface layout.
 #define USB_VID 0x303A
 #define USB_PID 0x4007  // shortcut: TinyUSB-style dev PID (CDC|MSC|HID bitmap), get a real VID/PID before shipping
-#define USB_BCD 0x0100
+#define USB_BCD 0x0101  // bump on descriptor changes (Windows caches them)
 
 enum { ITF_CDC = 0, ITF_CDC_DATA, ITF_MSC, ITF_HID, ITF_TOTAL };
 enum { STR_LANG, STR_MANUF, STR_PRODUCT, STR_SERIAL, STR_CDC, STR_MSC, STR_HID };
-enum { RID_KEYBOARD = 1, RID_CONSUMER = 2 };
+enum { RID_KEYBOARD = 1, RID_CONSUMER = 2, RID_MOUSE = 3 };
 
 static const uint8_t s_hid_report_desc[] = {
     TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(RID_KEYBOARD)),
     TUD_HID_REPORT_DESC_CONSUMER(HID_REPORT_ID(RID_CONSUMER)),
+    TUD_HID_REPORT_DESC_MOUSE(HID_REPORT_ID(RID_MOUSE)),
 };
 
 #define CFG_LEN (TUD_CONFIG_DESC_LEN + TUD_CDC_DESC_LEN + TUD_MSC_DESC_LEN + TUD_HID_DESC_LEN)
@@ -126,10 +127,10 @@ void hw_key(uint8_t page, uint16_t usage, bool pressed)
 }
 
 // ---------------- CDC ----------------
-void hw_kbd_report(uint8_t mods, const uint8_t keys[6])
+void hw_mouse_report(uint8_t buttons, int8_t x, int8_t y, int8_t wheel)
 {
     if (hid_wait_ready()) {
-        tud_hid_keyboard_report(RID_KEYBOARD, mods, (uint8_t *)keys);
+        tud_hid_mouse_report(RID_MOUSE, buttons, x, y, wheel, 0);
     }
 }
 

@@ -1,29 +1,31 @@
-// BLE report -> USB key mapping and the CDC line protocol. Pure C (no ESP-IDF) so it runs in host tests.
+// BLE input -> USB output: keys are HID usages (page:usage) decoded with the device's report map (hid_parse.h),
+// so mapping and passthrough don't depend on how a device lays out its reports. Also the CDC line protocol.
+// Pure C (no ESP-IDF) so it runs in host tests.
 #pragma once
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#define KM_MAX_ENTRIES 64
-#define KM_MAX_DATA 8
+#include "hid_parse.h"
 
-// One remote button: the exact BLE input report it sends -> one USB usage.
+#define KM_MAX_ENTRIES 64
+#define KM_MAX_MAPS 4  // report maps per BLE device
+
+// One remote key (HID usage it reports) -> one USB usage (KC_PAGE_* / usage from keycodes.h).
 typedef struct {
-    uint8_t rid;
-    uint8_t len;
-    uint8_t data[KM_MAX_DATA];
-    uint8_t page;   // KC_PAGE_*
+    uint16_t in_page, in_usage;
     uint16_t usage;
+    uint8_t page;
 } km_entry_t;
 
 void km_load(const km_entry_t *entries, int count);
 const km_entry_t *km_entries(int *count);
 
-// What the BLE device's report map says a report is. Unmapped KBD/CONSUMER reports pass through as-is.
-typedef enum { KM_SRC_OTHER, KM_SRC_KEYBOARD, KM_SRC_CONSUMER } km_src_t;
-
-// Feed one BLE input report (also used by the `inject` command).
-void km_on_report(uint8_t rid, const uint8_t *data, size_t len, km_src_t src);
+// Report maps of the connected device (n = 0: none). Releases anything held.
+void km_set_maps(const hp_map_t *maps, int n);
+// Feed one BLE input report (also used by `inject`). Prints "key <page>:<usage> <1|0> [name]" per change.
+// Returns true if any key went down or up (mouse motion alone returns false).
+bool km_on_report(uint8_t rid, const uint8_t *data, size_t len);
 // Release everything held (BLE device disconnected).
 void km_release_all(void);
 
@@ -33,8 +35,8 @@ void km_cmd(char *line);
 // Implemented by the platform (firmware: usb.c/main, host tests: stubs).
 void hw_print(const char *line);
 void hw_key(uint8_t page, uint16_t usage, bool pressed);
-void hw_kbd_report(uint8_t mods, const uint8_t keys[6]);  // whole boot-keyboard report (passthrough)
-// Platform commands (BLE scan/pair...). Return false if `argv[0]` is not one of them.
-bool hw_cmd(int argc, char **argv);
+void hw_mouse_report(uint8_t buttons, int8_t x, int8_t y, int8_t wheel);
 bool hw_save(const km_entry_t *entries, int count);
 void hw_dfu(void);
+// Platform commands (BLE scan/pair...). Return false if `argv[0]` is not one of them.
+bool hw_cmd(int argc, char **argv);

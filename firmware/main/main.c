@@ -38,7 +38,7 @@ static void line(const char *fmt, ...)
     hw_print(buf);
 }
 
-// "rpt <rid> <hex>" on CDC: what the tools record/replay and what `map` takes.
+// "rpt <rid> <hex>" on CDC for reports that pressed/released a key (not pure mouse motion): what tools record/replay.
 static void print_report(uint8_t rid, const uint8_t *data, size_t len)
 {
     char hex[64 * 2 + 1] = "";
@@ -163,14 +163,11 @@ static void hidh_callback(void *handler_args, esp_event_base_t base, int32_t id,
         ESP_LOGI(TAG, "BATTERY: %d%%", param->battery.level);
         break;
     case ESP_HIDH_INPUT_EVENT:
-        ESP_LOGI(TAG, "INPUT: %8s, MAP: %2u, ID: %3u, Len: %d", esp_hid_usage_str(param->input.usage),
+        ESP_LOGD(TAG, "INPUT: %8s, MAP: %2u, ID: %3u, Len: %d", esp_hid_usage_str(param->input.usage),
                  param->input.map_index, param->input.report_id, param->input.length);
-        ESP_LOG_BUFFER_HEX(TAG, param->input.data, param->input.length);
-        print_report(param->input.report_id, param->input.data, param->input.length);
-        km_on_report(param->input.report_id, param->input.data, param->input.length,
-                     param->input.usage == ESP_HID_USAGE_KEYBOARD ? KM_SRC_KEYBOARD
-                     : param->input.usage == ESP_HID_USAGE_CCONTROL ? KM_SRC_CONSUMER
-                                                                    : KM_SRC_OTHER);
+        if (km_on_report(param->input.report_id, param->input.data, param->input.length)) {
+            print_report(param->input.report_id, param->input.data, param->input.length);
+        }
         break;
     case ESP_HIDH_FEATURE_EVENT:
         ESP_LOGI(TAG, "FEATURE: ID %u, Len %d", param->feature.report_id, param->feature.length);
@@ -179,7 +176,7 @@ static void hidh_callback(void *handler_args, esp_event_base_t base, int32_t id,
         ESP_LOGI(TAG, "CLOSE: %s", esp_hidh_dev_name_get(param->close.dev));
         if (param->close.dev == s_conn) {
             s_conn = NULL;
-            km_release_all();
+            km_set_maps(NULL, 0);
             state_changed();
             xTaskNotifyGive(s_ble_task);
         }
@@ -188,6 +185,26 @@ static void hidh_callback(void *handler_args, esp_event_base_t base, int32_t id,
         ESP_LOGI(TAG, "EVENT: %d", (int)id);
         break;
     }
+}
+
+// Decode the device's report maps so keymap.c knows where each key / axis sits in its reports.
+static void load_maps(esp_hidh_dev_t *dev)
+{
+    static hp_map_t maps[KM_MAX_MAPS];
+    size_t n = 0;
+    esp_hid_raw_report_map_t *raw = NULL;
+    int used = 0;
+    if (esp_hidh_dev_report_maps_get(dev, &n, &raw) == ESP_OK) {
+        for (size_t i = 0; i < n && used < KM_MAX_MAPS; i++) {
+            memset(&maps[used], 0, sizeof(maps[used]));
+            if (hp_parse(raw[i].data, raw[i].len, &maps[used])) {
+                used++;
+            } else {
+                line("evt warn report map %u not understood", (unsigned)i);
+            }
+        }
+    }
+    km_set_maps(maps, used);
 }
 
 static void do_scan(void)
@@ -236,6 +253,7 @@ static void ble_task(void *arg)
             }
             if (c) {
                 const char *name = esp_hidh_dev_name_get(c);
+                load_maps(c);
                 s_conn = c;
                 if (name && strncmp(name, s_dev.name, sizeof(s_dev.name) - 1)) {
                     snprintf(s_dev.name, sizeof(s_dev.name), "%s", name);
