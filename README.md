@@ -140,3 +140,6 @@ python tool\usb_monitor.py watch
 - [x] G20BTS 리모콘: 페어링, 재플래시 후 자동 재연결, Report Map 해석 확인
 - [ ] 주소가 바뀌는(RPA) 장치는 재연결 안 될 수 있음. 미디어키 출력은 한 번에 1개
 - [ ] 실제 제품화 시 자체 VID/PID 필요 (`303A:4007`은 개발용)
+
+## 라이선스
+MIT ([LICENSE](LICENSE)). `firmware/main/esp_hid_gap.*`는 ESP-IDF 예제에서 가져온 코드로 원래 라이선스(Unlicense OR CC0-1.0)를 따름.
