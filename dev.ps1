@@ -87,7 +87,7 @@ function Build {
 function Parttool {
     Use-Idf
     $p = Get-FlashPort
-    Invoke-Checked python "$IdfPath\components\partition_table\parttool.py" --port $p --esptool-args after=no-reset @args
+    Invoke-Checked python "$IdfPath\components\partition_table\parttool.py" --esptool-args after=no-reset --port $p @args  # nargs='+': --port ends the list
     Invoke-Checked python -m esptool --port $p read-mac | Out-Null  # default --after hard-reset: back to the app
 }
 
