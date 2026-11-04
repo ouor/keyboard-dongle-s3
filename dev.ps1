@@ -83,7 +83,13 @@ function Build {
     Push-Location $Fw; try { Invoke-Checked idf.py build } finally { Pop-Location }
 }
 
-function Parttool { Use-Idf; Invoke-Checked python "$IdfPath\components\partition_table\parttool.py" --port (Get-FlashPort) @args }
+# parttool runs esptool several times; a reset in between boots the app and the next call loses the download port.
+function Parttool {
+    Use-Idf
+    $p = Get-FlashPort
+    Invoke-Checked python "$IdfPath\components\partition_table\parttool.py" --port $p --esptool-args after=no-reset @args
+    Invoke-Checked python -m esptool --port $p read-mac | Out-Null  # default --after hard-reset: back to the app
+}
 
 switch ($Cmd) {
     'build' { Build }

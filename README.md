@@ -49,7 +49,8 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
 - TF 슬롯: GPIO15~18, 47, 48
 - 참고 자료: 판매처 제공 패키지(회로도 `ESP32-S3-0.96LCD.pdf`, Arduino/IDF 예제, 원래 펌웨어 `.bin`) — 원래 펌웨어로 복구할 때 필요
 
-> ESP32-S3는 **BLE만** 지원(BT Classic 없음).
+> ESP32-S3는 **BLE만** 지원(BT Classic 없음). Windows "디바이스 추가"에 보여도 클래식 장치(예: 셀카 리모컨 Beauty-R1)는 검색·연결 불가.
+> 장치 종류 확인: `python tool\ble_inspect.py scan`에 나오면 BLE, 안 나오면 클래식일 가능성이 큼.
 
 ## 개발 환경
 | 항목 | 위치 / 버전 |

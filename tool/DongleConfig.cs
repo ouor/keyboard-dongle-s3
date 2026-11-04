@@ -54,7 +54,7 @@ class DongleConfig : Form
 
         var devTab = new TabPage("장치");
         devTab.Controls.Add(found);
-        devTab.Controls.Add(Row(scan, pair, new Label { AutoSize = true, Padding = new Padding(0, 6, 0, 0), Text = "리모콘을 페어링 모드로 두고 스캔" }));
+        devTab.Controls.Add(Row(scan, pair, new Label { AutoSize = true, Padding = new Padding(0, 6, 0, 0), Text = "페어링 모드로 두고 스캔 (BLE 장치만, 블루투스 클래식은 안 보임)" }));
         devTab.Controls.Add(Row(devState, forget));
 
         var mapTab = new TabPage("키 매핑");
