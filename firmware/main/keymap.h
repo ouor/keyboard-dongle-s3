@@ -1,0 +1,32 @@
+// BLE report -> USB key mapping and the CDC line protocol. Pure C (no ESP-IDF) so it runs in host tests.
+#pragma once
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
+#define KM_MAX_ENTRIES 64
+#define KM_MAX_DATA 8
+
+// One remote button: the exact BLE input report it sends -> one USB usage.
+typedef struct {
+    uint8_t rid;
+    uint8_t len;
+    uint8_t data[KM_MAX_DATA];
+    uint8_t page;   // KC_PAGE_*
+    uint16_t usage;
+} km_entry_t;
+
+void km_load(const km_entry_t *entries, int count);
+const km_entry_t *km_entries(int *count);
+
+// Feed one BLE input report (also used by the `inject` command).
+void km_on_report(uint8_t rid, const uint8_t *data, size_t len);
+
+// Execute one protocol line (modified in place). Replies go through hw_print().
+void km_cmd(char *line);
+
+// Implemented by the platform (firmware: usb.c/main, host tests: stubs).
+void hw_print(const char *line);
+void hw_key(uint8_t page, uint16_t usage, bool pressed);
+bool hw_save(const km_entry_t *entries, int count);
+void hw_dfu(void);
