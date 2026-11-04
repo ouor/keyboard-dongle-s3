@@ -13,6 +13,7 @@ static km_entry_t s_map[KM_MAX_ENTRIES];
 static int s_count;
 // shortcut: only one mapped button is held at a time (fine for remotes), track per-rid when chords are needed.
 static const km_entry_t *s_held;
+static bool s_pass_kbd, s_pass_cc;  // a passthrough key is currently down
 
 static void release_held(void)
 {
@@ -45,16 +46,56 @@ static const km_entry_t *match(uint8_t rid, const uint8_t *data, size_t len)
     return NULL;
 }
 
-void km_on_report(uint8_t rid, const uint8_t *data, size_t len)
+static void release_pass(void)
+{
+    if (s_pass_kbd) {
+        hw_kbd_report(0, (const uint8_t[6]){0});
+        s_pass_kbd = false;
+    }
+    if (s_pass_cc) {
+        hw_key(KC_PAGE_CONSUMER, 0, false);
+        s_pass_cc = false;
+    }
+}
+
+void km_release_all(void)
+{
+    release_held();
+    release_pass();
+}
+
+static bool all_zero(const uint8_t *d, size_t n)
+{
+    while (n && !d[n - 1]) {
+        n--;
+    }
+    return n == 0;
+}
+
+void km_on_report(uint8_t rid, const uint8_t *data, size_t len, km_src_t src)
 {
     const km_entry_t *e = len <= KM_MAX_DATA ? match(rid, data, len) : NULL;
-    if (e == s_held) {
-        return;  // key repeat / same state
+    if (e) {
+        release_pass();
+        if (e != s_held) {  // same entry again = key repeat
+            release_held();
+            hw_key(e->page, e->usage, true);
+            s_held = e;
+        }
+        return;
     }
     release_held();  // any other report (usually all-zero) means the button was released
-    if (e) {
-        hw_key(e->page, e->usage, true);
-        s_held = e;
+    // shortcut: passthrough only knows the boot keyboard layout (mods, 0, 6 keys) and one 16-bit consumer usage;
+    // parse the report map if a device sends something else that should pass through.
+    if (src == KM_SRC_KEYBOARD && len == 8) {
+        hw_kbd_report(data[0], data + 2);
+        s_pass_kbd = !all_zero(data, len);
+    } else if (src == KM_SRC_CONSUMER && len == 2) {
+        uint16_t u = (uint16_t)(data[0] | data[1] << 8);
+        if (u || s_pass_cc) {
+            hw_key(KC_PAGE_CONSUMER, u, u != 0);
+        }
+        s_pass_cc = u != 0;
     }
 }
 
@@ -147,7 +188,8 @@ void km_cmd(char *line)
     uint8_t data[KM_MAX_DATA];
 
     if (!strcmp(c, "help")) {
-        hw_print("ok cmds: ver | keys | list | map <rid> <hex> <key> | unmap <i> | clear | save | inject <rid> <hex> | dfu");
+        hw_print("ok cmds: ver | keys | list | map <rid> <hex> <key> | unmap <i> | clear | save | inject <rid> <hex> [kbd|cc]"
+                 " | status | scan [sec] | pair <addr> <addr_type> | forget | dfu");
     } else if (!strcmp(c, "ver")) {
         hw_print("ok " FW_VERSION);
     } else if (!strcmp(c, "keys")) {
@@ -201,16 +243,17 @@ void km_cmd(char *line)
     } else if (!strcmp(c, "inject")) {
         int rid = parse_rid(argv[1]);
         int len = argv[2] ? parse_hex(argv[2], data, KM_MAX_DATA) : -1;
-        if (rid < 0 || len < 0) {
-            hw_print("err usage: inject <rid> <hex>");
+        km_src_t src = !argv[3] ? KM_SRC_OTHER : !strcmp(argv[3], "kbd") ? KM_SRC_KEYBOARD : !strcmp(argv[3], "cc") ? KM_SRC_CONSUMER : (km_src_t)-1;
+        if (rid < 0 || len < 0 || (int)src < 0) {
+            hw_print("err usage: inject <rid> <hex> [kbd|cc]");
             return;
         }
-        km_on_report((uint8_t)rid, data, (size_t)len);
+        km_on_report((uint8_t)rid, data, (size_t)len, src);
         hw_print("ok");
     } else if (!strcmp(c, "dfu")) {
         hw_print("ok rebooting to download mode");
         hw_dfu();
-    } else {
+    } else if (!hw_cmd(argc, argv)) {
         hw_print("err unknown command (try help)");
     }
 }

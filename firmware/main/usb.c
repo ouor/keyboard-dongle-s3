@@ -126,6 +126,13 @@ void hw_key(uint8_t page, uint16_t usage, bool pressed)
 }
 
 // ---------------- CDC ----------------
+void hw_kbd_report(uint8_t mods, const uint8_t keys[6])
+{
+    if (hid_wait_ready()) {
+        tud_hid_keyboard_report(RID_KEYBOARD, mods, (uint8_t *)keys);
+    }
+}
+
 #define CMD_LINE_MAX 128
 static QueueHandle_t s_lines;
 static SemaphoreHandle_t s_tx_lock;

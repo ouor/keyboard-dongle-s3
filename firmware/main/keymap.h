@@ -19,8 +19,13 @@ typedef struct {
 void km_load(const km_entry_t *entries, int count);
 const km_entry_t *km_entries(int *count);
 
+// What the BLE device's report map says a report is. Unmapped KBD/CONSUMER reports pass through as-is.
+typedef enum { KM_SRC_OTHER, KM_SRC_KEYBOARD, KM_SRC_CONSUMER } km_src_t;
+
 // Feed one BLE input report (also used by the `inject` command).
-void km_on_report(uint8_t rid, const uint8_t *data, size_t len);
+void km_on_report(uint8_t rid, const uint8_t *data, size_t len, km_src_t src);
+// Release everything held (BLE device disconnected).
+void km_release_all(void);
 
 // Execute one protocol line (modified in place). Replies go through hw_print().
 void km_cmd(char *line);
@@ -28,5 +33,8 @@ void km_cmd(char *line);
 // Implemented by the platform (firmware: usb.c/main, host tests: stubs).
 void hw_print(const char *line);
 void hw_key(uint8_t page, uint16_t usage, bool pressed);
+void hw_kbd_report(uint8_t mods, const uint8_t keys[6]);  // whole boot-keyboard report (passthrough)
+// Platform commands (BLE scan/pair...). Return false if `argv[0]` is not one of them.
+bool hw_cmd(int argc, char **argv);
 bool hw_save(const km_entry_t *entries, int count);
 void hw_dfu(void);

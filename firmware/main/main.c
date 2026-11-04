@@ -53,7 +53,10 @@ static void hidh_callback(void *handler_args, esp_event_base_t base, int32_t id,
                  param->input.map_index, param->input.report_id, param->input.length);
         ESP_LOG_BUFFER_HEX(TAG, param->input.data, param->input.length);
         print_report(param->input.report_id, param->input.data, param->input.length);
-        km_on_report(param->input.report_id, param->input.data, param->input.length);
+        km_on_report(param->input.report_id, param->input.data, param->input.length,
+                     param->input.usage == ESP_HID_USAGE_KEYBOARD ? KM_SRC_KEYBOARD
+                     : param->input.usage == ESP_HID_USAGE_CCONTROL ? KM_SRC_CONSUMER
+                                                                    : KM_SRC_OTHER);
         break;
     case ESP_HIDH_FEATURE_EVENT:
         ESP_LOGI(TAG, "FEATURE: ID %u, Len %d", param->feature.report_id, param->feature.length);
@@ -68,6 +71,12 @@ static void hidh_callback(void *handler_args, esp_event_base_t base, int32_t id,
 }
 
 // shortcut: scans once at boot and opens the last BLE HID device found; no device choice or reconnect yet.
+bool hw_cmd(int argc, char **argv)
+{
+    (void)argc, (void)argv;
+    return false;
+}
+
 static void connect_task(void *arg)
 {
     size_t count = 0;
