@@ -16,7 +16,8 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
 | 경로 | 내용 |
 |---|---|
 | `dev.ps1` | 빌드/플래시/테스트 진입점 (아래 표) |
-| `firmware/main/main.c` | 앱 진입점: BLE 스캔·연결 → 리포트를 `keymap`과 CDC로 전달 |
+| `firmware/main/main.c` | 앱 진입점: 저장된 BLE 장치 재연결, scan/pair/forget, K1 → 리포트를 `keymap`과 CDC로 전달 |
+| `firmware/main/lcd.c` | 0.96" LCD 상태 화면 (연결 상태, 장치명) |
 | `firmware/main/keymap.c` | 리포트→키 매핑 + CDC 명령 처리. ESP 의존 없음 → `firmware/test/`에서 PC로 테스트 |
 | `firmware/main/usb.c` | USB 디스크립터, HID 출력, CDC 입출력, MSC, `dfu` |
 | `firmware/main/keymap_nvs.c` | 키맵 NVS 저장/로드 |
@@ -32,9 +33,10 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
    Python 3.11 + `pip install -r tool/requirements.txt`, (테스트용) LLVM clang.
    ESP-IDF가 `%USERPROFILE%\esp\esp-idf-v6.1`이 아니면 `$env:IDF_PATH` 설정.
 2. 스틱을 꽂고 `.\dev.ps1 flash` (첫 플래시가 안 잡히면 K1/BOOT 누른 채 꽂기).
-3. **리모콘을 페어링 모드로 둔 상태에서** 스틱을 다시 꽂기 — 부팅 시 5초 스캔 후 마지막으로 찾은 BLE HID 장치에 연결 (재연결은 아직 없음).
-4. `.\dev.ps1 monitor` (또는 USB 드라이브의 `DongleConfig.exe`) → 버튼을 누르면 `rpt 3 2302` 같은 줄이 나옴.
-5. `map 3 2302 AppHome` → `save`. 이제 그 버튼이 USB 키로 나감 (`python tool\usb_monitor.py watch`로 확인).
+3. 리모콘을 페어링 모드로 두고 **K1을 짧게 누르기** (5초 스캔 → 가장 가까운 HID 장치와 페어링), 또는 USB 드라이브의 `DongleConfig.exe` → 장치 탭 → 스캔 → 페어링.
+   페어링된 장치는 저장되어 이후엔 꽂기만 하면 자동 재연결 (끊겨도 계속 재시도). LCD에 상태/장치명 표시.
+4. 매핑 안 된 버튼도 원래 키(키보드/컨슈머 리포트)로 그대로 나감. 바꾸려면 exe → 키 매핑 탭 → 버튼 누르기 → 키 선택 → 추가 (자동 저장).
+5. 확인: `python tool\usb_monitor.py watch` (Windows가 실제로 받은 키).
 
 > 빌드는 `dev.ps1 build`로. `idf.py build`만 쓰면 exe 없이(경고 표시) 빈 드라이브로 빌드됨.
 
@@ -82,9 +84,14 @@ ESP32-S3 USB 스틱(`dongle-s3-0.96`)이 BLE 입력 장치(안드로이드TV 리
 | `list` | 현재 매핑 출력. 각 줄 형식: `map <i> <rid> <hex> <key>` |
 | `map <rid> <hex> <key>` | 리모콘이 보낸 리포트(rid+바이트) 그대로 → 키 (예: `map 3 2302 AppHome`) |
 | `unmap <i>` / `clear` / `save` | 삭제 / 전부 삭제 / NVS에 저장 (재부팅 후 유지) |
-| `inject <rid> <hex>` | BLE 리포트를 받은 것처럼 처리 (리플레이/테스트용) |
+| `inject <rid> <hex> [kbd\|cc]` | BLE 리포트를 받은 것처럼 처리 (리플레이/테스트용). `kbd`/`cc`: 키보드/컨슈머 리포트로 취급 (패스스루 테스트) |
+| `status` | `ok none\|connecting\|connected <addr> <name>` |
+| `scan [초]` | `ok` 후 `dev <addr> <addr_type> <rssi> <name>` 줄들, 끝나면 `evt scan end <n>` (재연결 시도 중이면 최대 10초 늦게 시작) |
+| `pair <addr> <addr_type>` / `forget` | 그 장치로 교체 / 장치 삭제. 둘 다 기존 본딩을 지움 (장치 1대만 유지) |
 | `dfu` | 다운로드 모드로 재부팅 |
 BLE 리포트가 들어올 때마다 `rpt <rid> <hex>` 출력 → 그 값을 그대로 `map`에 쓰면 됨. 응답은 `ok ...` / `err ...`.
+장치 상태가 바뀌면 `evt none|connecting|connected <addr> <name>` (exe가 이걸로 화면 갱신).
+매핑 우선, 매핑 없는 리포트는 패스스루: 부트 키보드 형식(8바이트) 키보드 리포트, 2바이트 컨슈머 리포트만.
 키 이름: [tool/keycodes.json](tool/keycodes.json) (한영 `HanEng`, 한자 `Hanja`, 안드로이드TV `AppHome`/`AppBack`/`Menu*` 포함).
 수정 후 `dev.ps1 build`가 `firmware/main/keycodes.h`, `tool/KeyCodes.cs`를 다시 생성.
 
@@ -119,7 +126,9 @@ python tool\usb_monitor.py watch
 
 ## 상태 / 남은 일
 - [x] 툴체인, 펌웨어 빌드, USB composite(HID+CDC+MSC), 키맵 + CDC 명령, 호스트 테스트, PC 스크립트
-- [ ] **하드웨어 미검증**: 아직 플래시 안 함 (USB 열거, MSC 마운트, `dfu` 재부팅)
-- [ ] BLE 장치 선택/재연결: 지금은 예제 그대로 부팅 시 1회 스캔 후 마지막 HID 장치에 연결, 끊기면 재연결 없음
-- [ ] 매핑 안 된 리포트는 버림 (패스스루 없음), 동시 입력(코드)은 1개만
+- [x] 하드웨어: USB 열거, MSC(J:에 exe), CDC, inject → Windows 키 입력 확인
+- [x] 저장된 장치 1대 자동 재연결, scan/pair/forget, K1 페어링, 패스스루, LCD 상태, exe 장치/매핑 탭
+- [ ] **실제 BLE 리모콘으로 미검증** (페어링/본딩/재연결), LCD 방향·오프셋 보정 (`lcd.c` 상단 상수)
+- [ ] 주소가 바뀌는(RPA) 장치는 재연결 안 될 수 있음, 매핑된 동시 입력은 1개만
+- [ ] 원래 펌웨어 백업: `dist\original-flash-16MB.bin` (0x0에 기록하면 복구, gitignore라 이 PC에만 있음)
 - [ ] 실제 제품화 시 자체 VID/PID 필요 (`303A:4007`은 개발용)
