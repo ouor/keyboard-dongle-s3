@@ -3,7 +3,7 @@
  *
  * SPDX-License-Identifier: Unlicense OR CC0-1.0
  */
-// Copied unmodified from ESP-IDF v6.1 examples/bluetooth/esp_hid_host (BLE scan + GAP/pairing helpers).
+// Copied from ESP-IDF v6.1 examples/bluetooth/esp_hid_host (BLE scan + GAP/pairing helpers). Only change: adv_is_hid().
 // The NimBLE / BT Classic branches are inactive here: this project builds Bluedroid BLE only.
 
 
@@ -403,6 +403,24 @@ static void handle_bt_device_result(struct disc_res_param *disc_res)
 #endif
 
 #if CONFIG_BT_BLE_ENABLED
+// esp-dongle change: the example only looked at the first UUID of the complete list. HID devices also list 0x1812
+// after other services, in the incomplete list, or only say what they are through Appearance (0x03C0-0x03CF = HID,
+// 0x0180 = remote control).
+static bool adv_is_hid(uint8_t *adv, uint8_t len, uint16_t appearance)
+{
+    const uint8_t types[] = {ESP_BLE_AD_TYPE_16SRV_PART, ESP_BLE_AD_TYPE_16SRV_CMPL};
+    for (size_t t = 0; t < sizeof(types); t++) {
+        uint8_t n = 0;
+        uint8_t *d = esp_ble_resolve_adv_data_by_type(adv, len, types[t], &n);
+        for (uint8_t i = 0; d && i + 1 < n; i += 2) {
+            if ((d[i] | d[i + 1] << 8) == ESP_GATT_UUID_HID_SVC) {
+                return true;
+            }
+        }
+    }
+    return (appearance & 0xFFC0) == 0x03C0 || (appearance & 0xFFC0) == 0x0180;
+}
+
 static void handle_ble_device_result(struct ble_scan_result_evt_param *scan_rst)
 {
 
@@ -456,7 +474,7 @@ static void handle_ble_device_result(struct ble_scan_result_evt_param *scan_rst)
     }
     GAP_DBG_PRINTF("\n");
 
-    if (uuid == ESP_GATT_UUID_HID_SVC) {
+    if (adv_is_hid(scan_rst->ble_adv, scan_rst->adv_data_len + scan_rst->scan_rsp_len, appearance)) {
         add_ble_scan_result(scan_rst->bda, scan_rst->ble_addr_type, appearance, adv_name, adv_name_len, scan_rst->rssi);
     }
 }
