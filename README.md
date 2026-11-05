@@ -2,7 +2,7 @@
 
 *ESP32-S3 USB stick that maps BLE remote buttons to USB keyboard/media keys; the config tool ships on the stick's own USB drive.*
 
-<p align="center"><img src="docs/dongle-s3-0.96.jpg" alt="dongle-s3-0.96 ESP32-S3 USB 스틱 (케이스 / 기판)" width="360"></p>
+<p align="center"><img src="docs/stick-with-remote.jpg" alt="G20BTS 리모콘과 연결된 스틱. LCD에 Connected G20BTS 표시" width="640"></p>
 
 블루투스(BLE) 리모콘이나 키보드의 버튼을 **원하는 키로 바꿔서** USB 키보드 입력으로 내보내는 USB 스틱.
 PC에서 한 번 설정해 두면 Windows, 안드로이드 등 USB 키보드를 인식하는 곳이면 어디에 꽂아도 그대로 동작합니다.
@@ -38,6 +38,8 @@ PC에서 한 번 설정해 두면 Windows, 안드로이드 등 USB 키보드를 
 
 ### 2. 키 매핑
 `DongleConfig.exe` → **키 매핑** 탭 → 리모콘 버튼 누르기 → 출력 키 선택 → 추가. 자동으로 스틱에 저장됩니다.
+
+<p align="center"><img src="docs/dongleconfig-mapping.png" alt="DongleConfig 키 매핑 탭. 리모콘 버튼별 입력 키, 코드, 출력 키 목록" width="562"></p>
 
 이제 스틱을 TV 박스, 다른 PC 등에 꽂아서 쓰면 됩니다. 설정은 스틱에 남아 있습니다.
 
@@ -153,4 +155,3 @@ python tool\usb_monitor.py watch                      # Windows가 실제로 받
 
 ## 라이선스
 MIT ([LICENSE](LICENSE)). `firmware/main/esp_hid_gap.*`는 ESP-IDF 예제 코드로 원래 라이선스(Unlicense OR CC0-1.0)를 따릅니다.
-보드 사진은 판매처 제품 사진입니다.
