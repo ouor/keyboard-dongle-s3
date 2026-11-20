@@ -15,6 +15,7 @@
 #include "esp_hidh.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "freertos/task.h"
 #include "keymap.h"
 #include "keymap_nvs.h"
@@ -36,6 +37,58 @@ static void line(const char *fmt, ...)
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
     hw_print(buf);
+}
+
+// ESP logs also go to CDC as "log <text>": boards without a UART adapter (ESP32-S3-Zero) have no other way to see them.
+// Logging tasks only queue the text; log_task prints it, so a log inside the CDC write path can't deadlock on hw_print's lock.
+static QueueHandle_t s_logq;
+static TaskHandle_t s_log_task;
+
+static int log_vprintf(const char *fmt, va_list ap)
+{
+    va_list ap2;
+    va_copy(ap2, ap);
+    int r = vprintf(fmt, ap);  // UART0 as before
+    char buf[160] = "log ";
+    if (s_logq && xTaskGetCurrentTaskHandle() != s_log_task) {
+        vsnprintf(buf + 4, sizeof(buf) - 4, fmt, ap2);
+        char *o = buf + 4;
+        for (const char *i = buf + 4; *i; i++) {  // drop color codes (ESC[..m) and line breaks
+            if (*i == '\033') {
+                while (*i && *i != 'm') {
+                    i++;
+                }
+                if (!*i) {
+                    break;
+                }
+            } else if (*i != '\r' && *i != '\n') {
+                *o++ = *i;
+            }
+        }
+        *o = 0;
+        if (o > buf + 4) {
+            xQueueSend(s_logq, buf, 0);  // full queue: drop rather than stall the BLE stack
+        }
+    }
+    va_end(ap2);
+    return r;
+}
+
+static void log_task(void *arg)
+{
+    char buf[160];
+    for (;;) {
+        if (xQueueReceive(s_logq, buf, portMAX_DELAY)) {
+            hw_print(buf);
+        }
+    }
+}
+
+static void log_to_cdc(void)
+{
+    s_logq = xQueueCreate(16, 160);
+    xTaskCreate(log_task, "log", 3072, NULL, 1, &s_log_task);
+    esp_log_set_vprintf(log_vprintf);
 }
 
 // "rpt <rid> <hex>" on CDC for reports that pressed/released a key (not pure mouse motion): what tools record/replay.
@@ -346,6 +399,7 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
     keymap_nvs_load();
     dev_load();
+    log_to_cdc();
     usb_init();  // HID is up before BLE: the stick is a keyboard right away
     lcd_init();
     state_changed();

@@ -142,6 +142,7 @@ BLE 리포트 → Report Map으로 눌린 키(HID `page:usage`) 추출 → 키�
 - 버튼을 누르거나 뗄 때 `key <page:usage> 1|0 [이름]`. 이 page:usage를 `map`에 쓰면 됩니다.
 - 그 리포트의 원본은 `rpt <rid> <hex>`.
 - 연결 상태가 바뀌면 `evt none|connecting|connected ...`.
+- ESP 로그(BLE 연결 실패 이유 등)는 `log <내용>`으로도 나옵니다. exe의 로그 탭에서 볼 수 있습니다 (UART 핀이 없는 보드용).
 
 키 이름 목록은 [tool/keycodes.json](tool/keycodes.json)에 있습니다. 한영 `HanEng`, 한자 `Hanja`, 안드로이드TV `AppHome`/`AppBack`/`Menu*` 등이 포함됩니다.
 
