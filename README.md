@@ -18,7 +18,7 @@ PC에서 한 번 설정해 두면 Windows, 안드로이드 등 USB 키보드를 
 | 🎯 버튼 → 키 매핑 | 버튼 하나 → 키 하나. 키보드 키, 미디어/앱 키(홈, 뒤로, 볼륨 등) 지원. 동시 입력 가능 |
 | 🔇 매핑한 키만 출력 | 매핑 안 된 버튼, 자이로 마우스 움직임은 PC로 **아무것도 보내지 않음** |
 | 🧩 장치 종류 무관 | 장치의 HID Report Map을 읽어서 해석. 장치별 코드 없이 BLE HID 장치 대부분 지원 |
-| 🖥️ 상태 표시 | 0.96" LCD에 연결 상태와 장치 이름 |
+| 🖥️ 상태 표시 | 0.96" LCD에 연결 상태와 장치 이름 (화면 없는 보드는 RGB LED 색) |
 | 🔘 버튼 하나로 페어링 | K1을 누르면 근처 장치를 찾아 가장 가까운 장치와 페어링 |
 
 ## 지원 장치
@@ -43,22 +43,31 @@ PC에서 한 번 설정해 두면 Windows, 안드로이드 등 USB 키보드를 
 
 이제 스틱을 TV 박스, 다른 PC 등에 꽂아서 쓰면 됩니다. 설정은 스틱에 남아 있습니다.
 
-### LCD / K1
-| LCD 표시 | 의미 |
-|---|---|
-| No device / Press K1 to pair | 저장된 장치 없음 |
-| Scanning.. | K1 또는 exe로 스캔 중 |
-| Searching.. + 장치 이름 | 저장된 장치에 재연결 시도 중 (리모콘 버튼을 누르면 깨어남) |
-| Connected + 장치 이름 | 연결됨 |
+### 상태 표시 / K1
+| LCD 표시 | 화면 없는 보드의 LED | 의미 |
+|---|---|---|
+| No device / Press K1 to pair | 흐린 흰색 | 저장된 장치 없음 |
+| Scanning.. | 청록 | K1 또는 exe로 스캔 중 |
+| Searching.. + 장치 이름 | 노랑 | 저장된 장치에 재연결 시도 중 (리모콘 버튼을 누르면 깨어남) |
+| Connected + 장치 이름 | 초록 | 연결됨 |
+
+K1은 보드의 BOOT 버튼입니다.
 
 ## 하드웨어
-**dongle-s3-0.96** (Pocket-Dongle-S3-0.96)
-- ESP32-S3, 16MB flash, PSRAM 8MB (미사용), 네이티브 USB (GPIO19/20)
-- 0.96" ST7735S LCD 80×160: SCLK 10, MOSI 11, CS 12, DC 13, RST 14
-- 버튼 K1 = GPIO0 (BOOT) · UART0 로그 GPIO43(TX)/44(RX) · TF 슬롯 GPIO15~18, 47, 48
+ESP32-S3 보드 두 종류를 지원합니다. [릴리즈](../../releases)에서 보드에 맞는 파일을 받아 0x0에 기록하세요.
+
+| 보드 | 릴리즈 파일 | 특징 |
+|---|---|---|
+| **Pocket-Dongle-S3-0.96** (dongle-s3-0.96) | `firmware-pocket-dongle-s3-0.96.bin` | 케이스 있는 USB 스틱, 0.96" LCD, 16MB flash |
+| **ESP32-S3-Zero** (Waveshare) | `firmware-esp32-s3-zero.bin` | 손톱만 한 보드, 화면 대신 RGB LED, 4MB flash. USB-C라 케이블로 연결 |
+
+공통: 네이티브 USB (GPIO19/20), K1 = GPIO0 (BOOT), UART0 로그 GPIO43(TX)/44(RX).
+- Pocket-Dongle: ST7735S LCD 80×160 (SCLK 10, MOSI 11, CS 12, DC 13, RST 14), PSRAM 8MB (미사용), TF 슬롯 GPIO15~18, 47, 48
+- ESP32-S3-Zero: WS2812 RGB LED GPIO21, PSRAM 2MB (미사용)
 
 > **처음 플래시하기 전에 원래 펌웨어 백업 권장.** K1을 누른 채 꽂아 다운로드 모드로 들어간 뒤:
-> `python -m esptool --chip esp32s3 -p COMx read-flash 0 0x1000000 dist\original-flash-16MB.bin`
+> `python -m esptool --chip esp32s3 -p COMx read-flash 0 0x1000000 dist\original-flash.bin`
+> (16MB 기준. ESP32-S3-Zero는 4MB라 `0x400000`)
 > (복구: 같은 파일을 0x0에 `write-flash`. `*.bin`은 gitignore 대상)
 
 ---
@@ -80,6 +89,8 @@ BLE 리포트 → Report Map으로 눌린 키(HID `page:usage`) 추출 → 키�
    기본 위치는 `%USERPROFILE%\esp\esp-idf-v6.1`이고, 다른 곳이면 `$env:IDF_PATH`를 설정합니다.
 2. Python 3.11 + `pip install -r tool/requirements.txt`. 테스트용으로 LLVM clang.
 3. 스틱을 꽂고 `.\dev.ps1 flash`. 처음에 안 잡히면 K1을 누른 채 꽂습니다.
+   ESP32-S3-Zero는 모든 명령에 `-Board s3zero`를 붙입니다 (빌드 폴더 `firmware/build-s3zero`, 설정 `sdkconfig.defaults.s3zero`, 파티션 `partitions_4mb.csv`).
+   동글이 두 개 꽂혀 있으면 `-Port COMx`로 지정하세요.
 
 > `idf.py build`만 쓰면 exe 없이 빈 드라이브로 빌드됩니다. `dev.ps1 build`를 쓰세요.
 
@@ -95,7 +106,7 @@ BLE 리포트 → Report Map으로 눌린 키(HID `page:usage`) 추출 → 키�
 | `erase-nvs` | BLE 본딩 + 키맵만 삭제 |
 | `storage` | FAT 파티션(exe)만 다시 쓰기 |
 | `coredump` | 마지막 크래시 분석 |
-| `dist` | `dist\esp-dongle-*.bin` 단일 바이너리 (0x0에 기록, [esptool-js](https://espressif.github.io/esptool-js/) 가능) |
+| `dist` | `dist\esp-dongle-<보드>-*.bin` 단일 바이너리 (0x0에 기록, [esptool-js](https://espressif.github.io/esptool-js/) 가능) |
 | `menuconfig` | `idf.py menuconfig` |
 
 ### 코드 구성
@@ -105,7 +116,7 @@ BLE 리포트 → Report Map으로 눌린 키(HID `page:usage`) 추출 → 키�
 | `firmware/main/hid_parse.c` | Report Map 해석, 리포트에서 눌린 키(page:usage) 추출 |
 | `firmware/main/keymap.c` | 매핑 + CDC 명령. ESP 의존 없음 → `firmware/test/`에서 PC로 테스트 |
 | `firmware/main/usb.c` | USB 디스크립터, HID 출력, CDC, MSC, `dfu` |
-| `firmware/main/lcd.c` | LCD 상태 화면 |
+| `firmware/main/lcd.c`, `led.c` | 상태 표시: LCD 화면 / 화면 없는 보드는 RGB LED. 보드는 Kconfig `DONGLE_BOARD`로 선택 |
 | `firmware/main/keymap_nvs.c` | 키맵 NVS 저장/로드 |
 | `firmware/main/esp_hid_gap.*` | IDF 예제의 BLE GAP 헬퍼 (`adv_is_hid()`만 수정) |
 | `tool/DongleConfig.cs`, `tool/build.ps1` | 설정 exe (C# WinForms, Windows 내장 `csc.exe`로 빌드, 설치 불필요) |

@@ -1,3 +1,4 @@
 dependencies:
   idf: ">=6.0"
   espressif/esp_tinyusb: "*"
+  espressif/led_strip: "^3"  # status LED on boards without a screen (led.c)

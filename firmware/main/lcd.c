@@ -1,6 +1,8 @@
 // 0.96" 80x160 ST7735S on SPI (dongle-s3-0.96: SCLK 10, MOSI 11, CS 12, DC 13, RST 14, backlight always on).
 // Driven with IDF's ST7789 panel driver: same command set for what we use (SLPOUT/MADCTL/COLMOD/CASET/RASET).
 #include "lcd.h"
+#include "sdkconfig.h"
+#if CONFIG_DONGLE_BOARD_LCD096
 
 #include <string.h>
 
@@ -136,3 +138,4 @@ void lcd_init(void)
     esp_lcd_panel_set_gap(s_panel, GAP_X, GAP_Y);
     esp_lcd_panel_disp_on_off(s_panel, true);
 }
+#endif  // CONFIG_DONGLE_BOARD_LCD096

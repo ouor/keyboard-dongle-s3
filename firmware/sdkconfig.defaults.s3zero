@@ -1,0 +1,4 @@
+# Board: ESP32-S3-Zero (ESP32-S3FH4R2: 4MB flash, no screen, WS2812 on GPIO21). Applied on top of sdkconfig.defaults.
+CONFIG_DONGLE_BOARD_S3ZERO=y
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions_4mb.csv"

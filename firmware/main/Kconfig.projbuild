@@ -1,0 +1,10 @@
+menu "Dongle"
+    choice DONGLE_BOARD
+        prompt "Board"
+        default DONGLE_BOARD_LCD096
+        config DONGLE_BOARD_LCD096
+            bool "dongle-s3-0.96 (0.96\" LCD)"
+        config DONGLE_BOARD_S3ZERO
+            bool "ESP32-S3-Zero (no screen, WS2812 RGB LED on GPIO21)"
+    endchoice
+endmenu

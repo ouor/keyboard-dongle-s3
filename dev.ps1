@@ -1,5 +1,6 @@
 <#
-  One entry point for the repetitive stuff.   .\dev.ps1 <cmd> [-Port COMx]
+  One entry point for the repetitive stuff.   .\dev.ps1 <cmd> [-Port COMx] [-Board lcd096|s3zero]
+  -Board s3zero: ESP32-S3-Zero (4MB, no screen, RGB LED). Own build dir firmware\build-s3zero.
 
   build      keycodes -> DongleConfig.exe -> firmware
   flash      build + flash everything (auto: finds the stick, sends `dfu` if our firmware is running)
@@ -16,7 +17,8 @@
 param(
     [Parameter(Position = 0)][ValidateSet('build', 'flash', 'monitor', 'all', 'test', 'ports', 'erase-nvs', 'storage', 'coredump', 'dist', 'menuconfig')]
     [string]$Cmd = 'build',
-    [string]$Port
+    [string]$Port,
+    [ValidateSet('lcd096', 's3zero')][string]$Board = 'lcd096'
 )
 $ErrorActionPreference = 'Stop'
 $Root = $PSScriptRoot
@@ -24,6 +26,9 @@ $Fw = "$Root\firmware"
 $IdfPath = if ($env:IDF_PATH) { $env:IDF_PATH } else { "$HOME\esp\esp-idf-v6.1" }  # set IDF_PATH if installed elsewhere
 $PidJtag = '1001'  # USB-Serial/JTAG: ROM download mode, or any app that hasn't started TinyUSB
 $PidApp = '4007'   # our TinyUSB composite (firmware/main/usb.c USB_PID)
+# Each board gets its own build dir + sdkconfig; the default board keeps the plain idf.py layout.
+$Build = if ($Board -eq 'lcd096') { 'build' } else { "build-$Board" }
+$Idf = if ($Board -eq 'lcd096') { @() } else { @('-B', $Build, '-D', "SDKCONFIG=$Build\sdkconfig", '-D', "SDKCONFIG_DEFAULTS=sdkconfig.defaults;sdkconfig.defaults.$Board") }
 
 function Use-Idf {
     if (Get-Command idf.py -ErrorAction SilentlyContinue) { return }
@@ -80,7 +85,7 @@ function Build {
     & "$Root\tool\build.ps1" | Out-Host
     if ($LASTEXITCODE) { throw 'DongleConfig build failed' }
     Use-Idf
-    Push-Location $Fw; try { Invoke-Checked idf.py build } finally { Pop-Location }
+    Push-Location $Fw; try { Invoke-Checked idf.py @Idf build } finally { Pop-Location }
 }
 
 # parttool runs esptool several times; a reset in between boots the app and the next call loses the download port.
@@ -93,9 +98,9 @@ function Parttool {
 
 switch ($Cmd) {
     'build' { Build }
-    'flash' { Build; Push-Location $Fw; try { Invoke-Checked idf.py -p (Get-FlashPort) flash } finally { Pop-Location } }
-    'monitor' { Use-Idf; Push-Location $Fw; try { idf.py -p (Get-MonitorPort) monitor --no-reset } finally { Pop-Location } }
-    'all' { & $PSCommandPath flash -Port $Port; Start-Sleep 3; & $PSCommandPath monitor }
+    'flash' { Build; Push-Location $Fw; try { Invoke-Checked idf.py @Idf -p (Get-FlashPort) flash } finally { Pop-Location } }
+    'monitor' { Use-Idf; Push-Location $Fw; try { idf.py @Idf -p (Get-MonitorPort) monitor --no-reset } finally { Pop-Location } }
+    'all' { & $PSCommandPath flash -Port $Port -Board $Board; Start-Sleep 3; & $PSCommandPath monitor -Board $Board }
     'test' {
         New-Item -ItemType Directory -Force "$Fw\build-host" | Out-Null
         Invoke-Checked clang -std=c11 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS "$Fw\test\test_keymap.c" "$Fw\main\keymap.c" "$Fw\main\hid_parse.c" -o "$Fw\build-host\test_keymap.exe"
@@ -103,16 +108,16 @@ switch ($Cmd) {
     }
     'ports' { Get-EspPorts | Format-Table Port, Pid, Name }
     'erase-nvs' { Parttool erase_partition --partition-name=nvs }
-    'storage' { & "$Root\tool\build.ps1" | Out-Host; Use-Idf; Push-Location $Fw; try { Invoke-Checked idf.py build } finally { Pop-Location }; Parttool write_partition --partition-name=storage --input "$Fw\build\storage.bin" }
-    'coredump' { Use-Idf; Push-Location $Fw; try { Invoke-Checked idf.py -p (Get-FlashPort) coredump-info } finally { Pop-Location } }
+    'storage' { & "$Root\tool\build.ps1" | Out-Host; Use-Idf; Push-Location $Fw; try { Invoke-Checked idf.py @Idf build } finally { Pop-Location }; Parttool write_partition --partition-name=storage --input "$Fw\$Build\storage.bin" }
+    'coredump' { Use-Idf; Push-Location $Fw; try { Invoke-Checked idf.py @Idf -p (Get-FlashPort) coredump-info } finally { Pop-Location } }
     'dist' {
         Build
-        Push-Location $Fw; try { Invoke-Checked idf.py merge-bin -o merged.bin } finally { Pop-Location }
+        Push-Location $Fw; try { Invoke-Checked idf.py @Idf merge-bin -o merged.bin } finally { Pop-Location }
         New-Item -ItemType Directory -Force "$Root\dist" | Out-Null
-        $out = "$Root\dist\esp-dongle-$(Get-Date -Format yyyyMMdd-HHmm).bin"
-        Copy-Item "$Fw\build\merged.bin" $out
+        $out = "$Root\dist\esp-dongle-$Board-$(Get-Date -Format yyyyMMdd-HHmm).bin"
+        Copy-Item "$Fw\$Build\merged.bin" $out
         Get-Item $out | Select-Object Name, Length
         Write-Host 'flash at 0x0:  esptool --chip esp32s3 write-flash 0x0 <file>   or https://espressif.github.io/esptool-js/'
     }
-    'menuconfig' { Use-Idf; Push-Location $Fw; try { idf.py menuconfig } finally { Pop-Location } }
+    'menuconfig' { Use-Idf; Push-Location $Fw; try { idf.py @Idf menuconfig } finally { Pop-Location } }
 }

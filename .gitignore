@@ -1,4 +1,5 @@
 firmware/build/
+firmware/build-*/
 firmware/build-host/
 firmware/managed_components/
 firmware/sdkconfig
