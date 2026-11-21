@@ -1,0 +1,244 @@
+   0.2 ok connecting f4:4e:fd:13:07:f8 G20BTS
+   6.5 log W (54566) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+   6.5 log E (54566) BLE_HIDH: OPEN failed: 0x85
+   6.5 log E (54566) BLE_HIDH: dev open failed! status: 0x85
+  17.5 log W (65566) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  17.5 log E (65566) BLE_HIDH: OPEN failed: 0x85
+  17.5 log E (65566) BLE_HIDH: dev open failed! status: 0x85
+  28.5 log W (76566) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  28.5 log E (76566) BLE_HIDH: OPEN failed: 0x85
+  28.5 log E (76566) BLE_HIDH: dev open failed! status: 0x85
+  39.5 log W (87566) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  39.5 log E (87566) BLE_HIDH: OPEN failed: 0x85
+  39.5 log E (87566) BLE_HIDH: dev open failed! status: 0x85
+  50.4 log W (98566) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  50.4 log E (98566) BLE_HIDH: OPEN failed: 0x85
+  50.4 log E (98566) BLE_HIDH: dev open failed! status: 0x85
+  58.5 log W (106566) BT_APPL: drop notif, handle 0x0026 not registered
+  58.5 log W (106576) BT_APPL: drop notif, handle 0x0026 not registered
+  58.5 log I (106576) ESP_HID_GAP: BLE GAP AUTH SUCCESS
+  59.9 log E (107916) hid_parser: expected APPLICATION, but got 0x02
+  59.9 log I (107916) dongle: f4:4e:fd:13:07:f8 OPEN: G20BTS
+  59.9 evt connected f4:4e:fd:13:07:f8 G20BTS
+  59.9 log I (108026) dongle: BATTERY: 100%
+  59.9 key 07:004f 1 Right
+  59.9 rpt 11 00004f0000000000
+  60.1 key 07:004f 0 Right
+  60.1 rpt 11 0000000000000000
+  61.6 key 0c:0223 1 AppHome
+  61.6 rpt 1 230200
+  61.8 key 0c:0223 0 AppHome
+  61.8 rpt 1 000000
+  62.2 key 0c:0223 1 AppHome
+  62.2 rpt 1 230200
+  62.4 key 0c:0223 0 AppHome
+  62.4 rpt 1 000000
+ 120.3 log W (168326) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x8
+ 120.3 log W (168326) BT_HCI: hcif disc complete: hdl 0x0, rsn 0x8 dev_find 1
+ 120.3 evt connecting f4:4e:fd:13:07:f8 G20BTS
+ 120.3 log I (168326) dongle: CLOSE: G20BTS
+ 120.3 log E (168336) ESP_HIDH: Already Connected
+ 121.3 log W (169336) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 121.3 log W (169336) BT_L2CAP: No extend connection parameters set, use default parameters
+ 121.3 log W (169336) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 121.3 log W (169336) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 121.3 log E (169346) BLE_HIDH: OPEN failed: 0x85
+ 121.3 log E (169346) BLE_HIDH: dev open failed! status: 0x85
+ 122.3 log W (170356) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 122.3 log W (170356) BT_L2CAP: No extend connection parameters set, use default parameters
+ 122.3 log W (170356) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 122.3 log W (170356) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 122.3 log E (170366) BLE_HIDH: OPEN failed: 0x85
+ 122.3 log E (170366) BLE_HIDH: dev open failed! status: 0x85
+ 123.3 log W (171376) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 123.3 log W (171376) BT_L2CAP: No extend connection parameters set, use default parameters
+ 123.3 log W (171376) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 123.3 log W (171376) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 123.3 log E (171386) BLE_HIDH: OPEN failed: 0x85
+ 123.3 log E (171386) BLE_HIDH: dev open failed! status: 0x85
+ 124.3 log W (172396) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 124.3 log W (172396) BT_L2CAP: No extend connection parameters set, use default parameters
+ 124.3 log W (172396) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 124.3 log W (172396) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 124.3 log E (172406) BLE_HIDH: OPEN failed: 0x85
+ 124.3 log E (172406) BLE_HIDH: dev open failed! status: 0x85
+ 125.4 log W (173416) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 125.4 log W (173416) BT_L2CAP: No extend connection parameters set, use default parameters
+ 125.4 log W (173416) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 125.4 log W (173416) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 125.4 log E (173426) BLE_HIDH: OPEN failed: 0x85
+ 125.4 log E (173426) BLE_HIDH: dev open failed! status: 0x85
+ 126.4 log W (174436) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 126.4 log W (174436) BT_L2CAP: No extend connection parameters set, use default parameters
+ 126.4 log W (174436) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 126.4 log W (174436) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 126.4 log E (174446) BLE_HIDH: OPEN failed: 0x85
+ 126.4 log E (174446) BLE_HIDH: dev open failed! status: 0x85
+ 127.4 log W (175456) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 127.4 log W (175456) BT_L2CAP: No extend connection parameters set, use default parameters
+ 127.4 log W (175456) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 127.4 log W (175456) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 127.4 log E (175466) BLE_HIDH: OPEN failed: 0x85
+ 127.4 log E (175466) BLE_HIDH: dev open failed! status: 0x85
+ 128.5 log W (176476) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 128.5 log W (176476) BT_L2CAP: No extend connection parameters set, use default parameters
+ 128.5 log W (176476) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 128.5 log W (176476) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 128.5 log E (176486) BLE_HIDH: OPEN failed: 0x85
+ 128.5 log E (176486) BLE_HIDH: dev open failed! status: 0x85
+ 129.5 log W (177496) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 129.5 log W (177496) BT_L2CAP: No extend connection parameters set, use default parameters
+ 129.5 log W (177496) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 129.5 log W (177496) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 129.5 log E (177506) BLE_HIDH: OPEN failed: 0x85
+ 129.5 log E (177506) BLE_HIDH: dev open failed! status: 0x85
+ 130.4 log W (178516) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 130.4 log W (178516) BT_L2CAP: No extend connection parameters set, use default parameters
+ 130.4 log W (178516) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 130.6 log W (178516) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 130.6 log E (178526) BLE_HIDH: OPEN failed: 0x85
+ 130.6 log E (178526) BLE_HIDH: dev open failed! status: 0x85
+ 131.4 log W (179536) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 131.4 log W (179536) BT_L2CAP: No extend connection parameters set, use default parameters
+ 131.4 log W (179536) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 131.4 log W (179536) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 131.4 log E (179546) BLE_HIDH: OPEN failed: 0x85
+ 131.4 log E (179546) BLE_HIDH: dev open failed! status: 0x85
+ 132.5 log W (180556) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 132.5 log W (180556) BT_L2CAP: No extend connection parameters set, use default parameters
+ 132.5 log W (180556) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 132.5 log W (180556) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 132.5 log E (180566) BLE_HIDH: OPEN failed: 0x85
+ 132.5 log E (180566) BLE_HIDH: dev open failed! status: 0x85
+ 133.5 log W (181576) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 133.5 log W (181576) BT_L2CAP: No extend connection parameters set, use default parameters
+ 133.5 log W (181576) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 133.5 log W (181576) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 133.5 log E (181586) BLE_HIDH: OPEN failed: 0x85
+ 133.5 log E (181586) BLE_HIDH: dev open failed! status: 0x85
+ 134.5 log W (182596) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 134.5 log W (182596) BT_L2CAP: No extend connection parameters set, use default parameters
+ 134.5 log W (182596) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 134.5 log W (182596) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 134.5 log E (182606) BLE_HIDH: OPEN failed: 0x85
+ 134.5 log E (182606) BLE_HIDH: dev open failed! status: 0x85
+ 135.5 log W (183616) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 135.5 log W (183616) BT_L2CAP: No extend connection parameters set, use default parameters
+ 135.5 log W (183616) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 135.5 log W (183616) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 135.5 log E (183626) BLE_HIDH: OPEN failed: 0x85
+ 135.5 log E (183626) BLE_HIDH: dev open failed! status: 0x85
+ 136.6 log W (184636) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 136.6 log W (184636) BT_L2CAP: No extend connection parameters set, use default parameters
+ 136.6 log W (184636) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 136.6 log W (184636) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 136.6 log E (184646) BLE_HIDH: OPEN failed: 0x85
+ 136.6 log E (184646) BLE_HIDH: dev open failed! status: 0x85
+ 137.6 log W (185656) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 137.6 log W (185656) BT_L2CAP: No extend connection parameters set, use default parameters
+ 137.6 log W (185656) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 137.6 log W (185656) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 137.6 log E (185666) BLE_HIDH: OPEN failed: 0x85
+ 137.6 log E (185666) BLE_HIDH: dev open failed! status: 0x85
+ 138.6 log W (186676) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 138.6 log W (186676) BT_L2CAP: No extend connection parameters set, use default parameters
+ 138.6 log W (186676) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 138.6 log W (186676) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 138.6 log E (186686) BLE_HIDH: OPEN failed: 0x85
+ 138.6 log E (186686) BLE_HIDH: dev open failed! status: 0x85
+ 139.7 log W (187696) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 139.7 log W (187696) BT_L2CAP: No extend connection parameters set, use default parameters
+ 139.7 log W (187696) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 139.7 log W (187696) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 139.7 log E (187706) BLE_HIDH: OPEN failed: 0x85
+ 139.7 log E (187706) BLE_HIDH: dev open failed! status: 0x85
+ 140.7 log W (188716) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 140.7 log W (188716) BT_L2CAP: No extend connection parameters set, use default parameters
+ 140.7 log W (188716) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 140.7 log W (188716) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 140.7 log E (188726) BLE_HIDH: OPEN failed: 0x85
+ 140.7 log E (188726) BLE_HIDH: dev open failed! status: 0x85
+ 141.7 log W (189736) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 141.7 log W (189736) BT_L2CAP: No extend connection parameters set, use default parameters
+ 141.7 log W (189736) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 141.7 log W (189736) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 141.7 log E (189746) BLE_HIDH: OPEN failed: 0x85
+ 141.7 log E (189746) BLE_HIDH: dev open failed! status: 0x85
+ 142.7 log W (190756) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 142.7 log W (190756) BT_L2CAP: No extend connection parameters set, use default parameters
+ 142.7 log W (190756) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 142.7 log W (190756) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 142.7 log E (190766) BLE_HIDH: OPEN failed: 0x85
+ 142.7 log E (190766) BLE_HIDH: dev open failed! status: 0x85
+ 143.7 log W (191776) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 143.7 log W (191776) BT_L2CAP: No extend connection parameters set, use default parameters
+ 143.7 log W (191776) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 143.7 log W (191776) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 143.7 log E (191786) BLE_HIDH: OPEN failed: 0x85
+ 143.7 log E (191786) BLE_HIDH: dev open failed! status: 0x85
+ 144.8 log W (192796) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 144.8 log W (192796) BT_L2CAP: No extend connection parameters set, use default parameters
+ 144.8 log W (192796) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 144.8 log W (192796) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 144.8 log E (192806) BLE_HIDH: OPEN failed: 0x85
+ 144.8 log E (192806) BLE_HIDH: dev open failed! status: 0x85
+ 145.8 log W (193816) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 145.8 log W (193816) BT_L2CAP: No extend connection parameters set, use default parameters
+ 145.8 log W (193816) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 145.8 log W (193816) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 145.8 log E (193826) BLE_HIDH: OPEN failed: 0x85
+ 145.8 log E (193826) BLE_HIDH: dev open failed! status: 0x85
+ 146.8 log W (194836) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 146.8 log W (194836) BT_L2CAP: No extend connection parameters set, use default parameters
+ 146.8 log W (194836) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 146.8 log W (194836) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 146.8 log E (194846) BLE_HIDH: OPEN failed: 0x85
+ 146.8 log E (194846) BLE_HIDH: dev open failed! status: 0x85
+ 147.9 log W (195856) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 147.9 log W (195856) BT_L2CAP: No extend connection parameters set, use default parameters
+ 147.9 log W (195856) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 147.9 log W (195856) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 147.9 log E (195866) BLE_HIDH: OPEN failed: 0x85
+ 147.9 log E (195866) BLE_HIDH: dev open failed! status: 0x85
+ 148.7 log W (196876) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 148.9 log W (196876) BT_L2CAP: No extend connection parameters set, use default parameters
+ 148.9 log W (196876) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 148.9 log W (196876) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 148.9 log E (196886) BLE_HIDH: OPEN failed: 0x85
+ 148.9 log E (196886) BLE_HIDH: dev open failed! status: 0x85
+ 149.7 log W (197896) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 150.0 log W (197896) BT_L2CAP: No extend connection parameters set, use default parameters
+ 150.0 log W (197896) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 150.0 log W (197896) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 150.0 log E (197906) BLE_HIDH: OPEN failed: 0x85
+ 150.0 log E (197906) BLE_HIDH: dev open failed! status: 0x85
+ 150.8 log W (198916) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 150.8 log W (198916) BT_L2CAP: No extend connection parameters set, use default parameters
+ 150.8 log W (198916) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 151.0 log W (198916) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 151.0 log E (198926) BLE_HIDH: OPEN failed: 0x85
+ 151.0 log E (198926) BLE_HIDH: dev open failed! status: 0x85
+ 151.8 log W (199936) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 151.8 log W (199936) BT_L2CAP: No extend connection parameters set, use default parameters
+ 151.8 log W (199936) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 152.0 log W (199936) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 152.0 log E (199946) BLE_HIDH: OPEN failed: 0x85
+ 152.0 log E (199946) BLE_HIDH: dev open failed! status: 0x85
+ 152.8 log W (200956) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 153.0 log W (200956) BT_L2CAP: No extend connection parameters set, use default parameters
+ 153.0 log W (200956) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 153.0 log W (200956) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 153.0 log E (200966) BLE_HIDH: OPEN failed: 0x85
+ 153.0 log E (200966) BLE_HIDH: dev open failed! status: 0x85
+ 153.8 log W (201976) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 154.0 log W (201976) BT_L2CAP: No extend connection parameters set, use default parameters
+ 154.0 log W (201976) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 154.0 log W (201976) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 154.0 log E (201986) BLE_HIDH: OPEN failed: 0x85
+ 154.0 log E (201986) BLE_HIDH: dev open failed! status: 0x85
+ 155.0 log W (202996) BT_L2CAP: is_aux auto-set to true (BLE 5.0 API used)
+ 155.0 log W (202996) BT_L2CAP: No extend connection parameters set, use default parameters
+ 155.0 log W (202996) BT_HCI: opcode=0x2043, status= 0c: Cmd Disallowed
+ 155.0 log W (202996) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+ 155.0 log E (203006) BLE_HIDH: OPEN failed: 0x85
+ 155.0 log E (203006) BLE_HIDH: dev open failed! status: 0x85
