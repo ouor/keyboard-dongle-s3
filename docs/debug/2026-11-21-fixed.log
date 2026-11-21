@@ -1,0 +1,234 @@
+   0.2 ok connecting f4:4e:fd:13:07:f8 G20BTS
+   5.7 log W (54569) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+   5.7 log E (54569) BLE_HIDH: OPEN failed: 0x85
+   5.7 log E (54569) BLE_HIDH: dev open failed! status: 0x85
+  16.8 log W (65569) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  16.8 log E (65569) BLE_HIDH: OPEN failed: 0x85
+  16.8 log E (65569) BLE_HIDH: dev open failed! status: 0x85
+  27.8 log W (76569) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  27.8 log E (76569) BLE_HIDH: OPEN failed: 0x85
+  27.8 log E (76569) BLE_HIDH: dev open failed! status: 0x85
+  38.8 log W (87569) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  38.8 log E (87569) BLE_HIDH: OPEN failed: 0x85
+  38.8 log E (87569) BLE_HIDH: dev open failed! status: 0x85
+  49.8 log W (98569) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x100
+  49.8 log E (98569) BLE_HIDH: OPEN failed: 0x85
+  49.8 log E (98569) BLE_HIDH: dev open failed! status: 0x85
+  57.1 log W (105809) BT_APPL: drop notif, handle 0x0032 not registered
+  57.1 log W (105819) BT_APPL: drop notif, handle 0x0032 not registered
+  57.1 log I (105819) ESP_HID_GAP: BLE GAP AUTH SUCCESS
+  57.1 log W (105909) BT_APPL: drop notif, handle 0x002e not registered
+  57.1 log W (105939) BT_APPL: drop notif, handle 0x002e not registered
+  57.1 log W (105939) BT_APPL: drop notif, handle 0x002e not registered
+  57.1 log W (105939) BT_APPL: drop notif, handle 0x002e not registered
+  57.1 log W (105959) BT_APPL: drop notif, handle 0x002e not registered
+  57.1 log W (105959) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (105989) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (105989) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (105989) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106009) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106009) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106039) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106039) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106069) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106069) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106069) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106089) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106089) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106089) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106109) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106109) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106139) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106139) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106139) BT_APPL: drop notif, handle 0x002e not registered
+  57.3 log W (106159) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106159) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106189) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106189) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106189) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106209) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106209) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106239) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106239) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106239) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106259) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106259) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106289) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106289) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106289) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106309) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106309) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106329) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106329) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106339) BT_APPL: drop notif, handle 0x002e not registered
+  57.5 log W (106349) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106359) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106369) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106379) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106389) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106409) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106409) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106419) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106429) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106439) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106449) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106459) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106469) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106479) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106489) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106499) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106509) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106519) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106529) BT_APPL: drop notif, handle 0x0032 not registered
+  57.7 log W (106539) BT_APPL: drop notif, handle 0x002e not registered
+  57.7 log W (106539) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106549) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log E (106559) hid_parser: expected APPLICATION, but got 0x02
+  57.9 log I (106559) dongle: f4:4e:fd:13:07:f8 OPEN: G20BTS
+  57.9 log W (106579) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106589) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106619) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106629) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106639) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106669) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106679) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106689) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106709) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log I (106719) dongle: BATTERY: 100%
+  57.9 log W (106719) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106729) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106739) BT_APPL: drop notif, handle 0x002e not registered
+  57.9 log W (106739) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106749) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106749) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106759) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106759) BT_APPL: drop notif, handle 0x0032 not registered
+  58.1 log W (106769) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 evt connected f4:4e:fd:13:07:f8 G20BTS
+  58.1 log W (106769) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106779) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106779) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106789) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106789) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106799) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106809) BT_APPL: drop notif, handle 0x002e not registered
+  58.1 log W (106809) BT_APPL: drop notif, handle 0x002e not registered
+  59.4 key 0c:0223 1 AppHome
+  59.4 rpt 1 230200
+  59.4 key 0c:0223 0 AppHome
+  59.4 rpt 1 000000
+  59.6 key 0c:0223 1 AppHome
+  59.6 rpt 1 230200
+  59.8 key 0c:0223 0 AppHome
+  59.8 rpt 1 000000
+  59.8 key 0c:0223 1 AppHome
+  59.8 rpt 1 230200
+  60.0 key 0c:0223 0 AppHome
+  60.0 rpt 1 000000
+ 116.1 log W (164869) BT_APPL: gattc_conn_cb: if=3 st=0 id=3 rsn=0x8
+ 116.1 log W (164869) BT_HCI: hcif disc complete: hdl 0x0, rsn 0x8 dev_find 1
+ 116.1 log I (164869) dongle: CLOSE: G20BTS
+ 116.1 evt connecting f4:4e:fd:13:07:f8 G20BTS
+ 116.1 log E (164879) ESP_HIDH: Already Connected
+ 120.2 log I (168919) ESP_HID_GAP: BLE GAP AUTH SUCCESS
+ 120.2 log W (169009) BT_APPL: drop notif, handle 0x002e not registered
+ 120.2 log W (169039) BT_APPL: drop notif, handle 0x002e not registered
+ 120.2 log W (169039) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169039) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169059) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169059) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169069) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169089) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169089) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169119) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169119) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169119) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169139) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169139) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169159) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169159) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169159) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169189) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169189) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169209) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169209) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169239) BT_APPL: drop notif, handle 0x002e not registered
+ 120.4 log W (169239) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169239) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169259) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169259) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169259) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169289) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169289) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169309) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169309) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169309) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169339) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169339) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169359) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169359) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169359) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169379) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169379) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169389) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169399) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169429) BT_APPL: drop notif, handle 0x002e not registered
+ 120.6 log W (169439) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169439) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169439) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169459) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169459) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169469) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169479) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169499) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169499) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169509) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169519) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169539) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169539) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169549) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169559) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169579) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169579) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169589) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log W (169599) BT_APPL: drop notif, handle 0x002e not registered
+ 120.8 log E (169609) hid_parser: expected APPLICATION, but got 0x02
+ 120.8 log I (169609) dongle: f4:4e:fd:13:07:f8 OPEN: G20BTS
+ 121.0 log W (169619) BT_APPL: drop notif, handle 0x002e not registered
+ 121.0 log W (169629) BT_APPL: drop notif, handle 0x002e not registered
+ 121.0 evt connected f4:4e:fd:13:07:f8 G20BTS
+ 121.0 log W (169639) BT_APPL: drop notif, handle 0x002e not registered
+ 121.0 log W (169649) BT_APPL: drop notif, handle 0x002e not registered
+ 121.0 log I (169749) dongle: BATTERY: 100%
+ 123.2 key 0c:0223 1 AppHome
+ 123.2 rpt 1 230200
+ 123.2 key 0c:0223 0 AppHome
+ 123.2 rpt 1 000000
+ 123.9 key 0c:0223 1 AppHome
+ 123.9 rpt 1 230200
+ 123.9 key 0c:0223 0 AppHome
+ 123.9 rpt 1 000000
+ 124.1 key 0c:0223 1 AppHome
+ 124.1 rpt 1 230200
+ 124.3 key 0c:0223 0 AppHome
+ 124.3 rpt 1 000000
+ 124.3 key 0c:0223 1 AppHome
+ 124.3 rpt 1 230200
+ 124.5 key 0c:0223 0 AppHome
+ 124.5 rpt 1 000000
+ 124.7 key 0c:0223 1 AppHome
+ 124.7 rpt 1 230200
+ 124.7 key 0c:0223 0 AppHome
+ 124.7 rpt 1 000000
+ 124.7 key 0c:0223 1 AppHome
+ 124.7 rpt 1 230200
+ 124.9 key 0c:0223 0 AppHome
+ 124.9 rpt 1 000000
+ 124.9 key 0c:0223 1 AppHome
+ 124.9 rpt 1 230200
+ 125.1 key 0c:0223 0 AppHome
+ 125.1 rpt 1 000000
+ 125.1 key 0c:0223 1 AppHome
+ 125.1 rpt 1 230200
+ 125.3 key 0c:0223 0 AppHome
+ 125.3 rpt 1 000000
