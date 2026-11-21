@@ -38,10 +38,13 @@ function Use-Idf {
 
 function Invoke-Checked { & $args[0] @($args | Select-Object -Skip 1); if ($LASTEXITCODE) { throw "$($args[0]) failed ($LASTEXITCODE)" } }
 
+# Serial = the chip MAC (ROM: "E8:3D:..", our firmware: "E83D.."), so one board keeps it across dfu.
 function Get-EspPorts {
     Get-CimInstance Win32_PnPEntity -Filter "PNPDeviceID LIKE 'USB\\VID_303A%'" | ForEach-Object {
         if ($_.Name -match '\((COM\d+)\)') {
-            [pscustomobject]@{ Port = $Matches[1]; Pid = ($_.PNPDeviceID -replace '.*PID_([0-9A-F]{4}).*', '$1'); Name = $_.Name }
+            $parent = (Get-PnpDeviceProperty -InstanceId $_.PNPDeviceID -KeyName DEVPKEY_Device_Parent).Data
+            [pscustomobject]@{ Port = $Matches[1]; Pid = ($_.PNPDeviceID -replace '.*PID_([0-9A-F]{4}).*', '$1')
+                Serial = ($parent -replace '.*\\', '' -replace ':', '').ToUpper(); Name = $_.Name }
         }
     }
 }
@@ -54,23 +57,22 @@ function Send-Line($p, $line) {
 }
 
 # Port that esptool can talk to. Kicks our firmware into download mode when needed.
+# Several boards plugged in: needs -Port (the dongle's COM port is fine); never guesses which one to flash.
 function Get-FlashPort {
-    if ($Port) { return $Port }
     $all = @(Get-EspPorts)
-    $jtag = $all | Where-Object Pid -eq $PidJtag | Select-Object -First 1
-    if ($jtag) { return $jtag.Port }
-    $app = $all | Where-Object Pid -eq $PidApp | Select-Object -First 1
-    if ($app) {
-        Write-Host "dongle firmware on $($app.Port) -> sending 'dfu'"
-        Send-Line $app.Port 'dfu'
-        foreach ($i in 1..40) {
-            Start-Sleep -Milliseconds 250
-            $jtag = Get-EspPorts | Where-Object Pid -eq $PidJtag | Select-Object -First 1
-            if ($jtag) { Start-Sleep -Milliseconds 500; return $jtag.Port }
-        }
-        throw "no download port after 'dfu'. Hold BOOT (K1) while plugging in, then retry."
+    $dev = if ($Port) { $all | Where-Object Port -eq $Port } else { $all }
+    if (-not $dev -and $Port) { return $Port }  # e.g. a UART adapter
+    if (@($dev).Count -gt 1) { throw "several ESP32-S3 found, pick one with -Port: $(($all | ForEach-Object { "$($_.Port) ($($_.Pid) $($_.Serial))" }) -join ', ')" }
+    if (-not $dev) { throw "ESP32-S3 not found. Plug it in (hold BOOT/K1 while plugging if it doesn't show up)." }
+    if ($dev.Pid -eq $PidJtag) { return $dev.Port }
+    Write-Host "dongle firmware on $($dev.Port) -> sending 'dfu'"
+    Send-Line $dev.Port 'dfu'
+    foreach ($i in 1..40) {
+        Start-Sleep -Milliseconds 250
+        $jtag = Get-EspPorts | Where-Object { $_.Pid -eq $PidJtag -and $_.Serial -eq $dev.Serial } | Select-Object -First 1
+        if ($jtag) { Start-Sleep -Milliseconds 500; return $jtag.Port }
     }
-    throw "ESP32-S3 not found. Plug it in (hold BOOT/K1 while plugging if it doesn't show up)."
+    throw "no download port after 'dfu'. Hold BOOT (K1) while plugging in, then retry."
 }
 
 function Get-MonitorPort {
@@ -106,7 +108,7 @@ switch ($Cmd) {
         Invoke-Checked clang -std=c11 -Wall -Wextra -Werror -D_CRT_SECURE_NO_WARNINGS "$Fw\test\test_keymap.c" "$Fw\main\keymap.c" "$Fw\main\hid_parse.c" -o "$Fw\build-host\test_keymap.exe"
         Invoke-Checked "$Fw\build-host\test_keymap.exe"
     }
-    'ports' { Get-EspPorts | Format-Table Port, Pid, Name }
+    'ports' { Get-EspPorts | Format-Table Port, Pid, Serial, Name }
     'erase-nvs' { Parttool erase_partition --partition-name=nvs }
     'storage' { & "$Root\tool\build.ps1" | Out-Host; Use-Idf; Push-Location $Fw; try { Invoke-Checked idf.py @Idf build } finally { Pop-Location }; Parttool write_partition --partition-name=storage --input "$Fw\$Build\storage.bin" }
     'coredump' { Use-Idf; Push-Location $Fw; try { Invoke-Checked idf.py @Idf -p (Get-FlashPort) coredump-info } finally { Pop-Location } }
