@@ -132,10 +132,14 @@ static SemaphoreHandle_t s_tx_lock;
 
 void hw_print(const char *line)
 {
+    if (!s_tx_lock) {
+        return;  // before usb_init (early log lines)
+    }
+    xSemaphoreTake(s_tx_lock, portMAX_DELAY);  // taken first: hw_dfu holds it for good once TinyUSB is gone
     if (!tud_cdc_connected()) {
+        xSemaphoreGive(s_tx_lock);
         return;  // nobody listening (DTR low): don't fill the buffer
     }
-    xSemaphoreTake(s_tx_lock, portMAX_DELAY);
     tinyusb_cdcacm_write_queue(TINYUSB_CDC_ACM_0, (const uint8_t *)line, strlen(line));
     tinyusb_cdcacm_write_queue(TINYUSB_CDC_ACM_0, (const uint8_t *)"\r\n", 2);
     tinyusb_cdcacm_write_flush(TINYUSB_CDC_ACM_0, pdMS_TO_TICKS(50));
@@ -180,6 +184,7 @@ static void cmd_task(void *arg)
 void hw_dfu(void)
 {
     vTaskDelay(pdMS_TO_TICKS(100));  // let the "ok" reply go out
+    xSemaphoreTake(s_tx_lock, portMAX_DELAY);  // never given back: no CDC writes (log lines) into an uninstalled TinyUSB
     tinyusb_driver_uninstall();
     // Hand the internal PHY back to USB-Serial/JTAG so the ROM download mode shows up as 303A:1001 (same as Arduino-ESP32).
     CLEAR_PERI_REG_MASK(RTC_CNTL_USB_CONF_REG, RTC_CNTL_SW_HW_USB_PHY_SEL | RTC_CNTL_SW_USB_PHY_SEL | RTC_CNTL_USB_PAD_ENABLE);

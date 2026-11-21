@@ -205,7 +205,12 @@ static void hidh_callback(void *handler_args, esp_event_base_t base, int32_t id,
     switch ((esp_hidh_event_t)id) {
     case ESP_HIDH_OPEN_EVENT:
         if (param->open.status == ESP_OK) {
+            // NULL when esp_hidh already freed the device (link dropped right after open): crashed here before.
             const uint8_t *bda = esp_hidh_dev_bda_get(param->open.dev);
+            if (!bda) {
+                ESP_LOGW(TAG, "OPEN for a device that is already gone");
+                break;
+            }
             ESP_LOGI(TAG, ESP_BD_ADDR_STR " OPEN: %s", ESP_BD_ADDR_HEX(bda), esp_hidh_dev_name_get(param->open.dev));
             esp_hidh_dev_dump(param->open.dev, stdout);
         } else {
@@ -303,6 +308,9 @@ static void ble_task(void *arg)
             if (c && memcmp(want.bda, s_dev.bda, sizeof(want.bda))) {
                 esp_hidh_dev_close(c);  // device changed while we were connecting
                 c = NULL;
+            }
+            if (c && !esp_hidh_dev_bda_get(c)) {
+                c = NULL;  // dropped and freed right after open: keeping it would mean "connected" forever, no retries
             }
             if (c) {
                 const char *name = esp_hidh_dev_name_get(c);
