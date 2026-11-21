@@ -3,7 +3,6 @@
 
 #include <string.h>
 
-#include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_partition.h"
 #include "esp_rom_sys.h"
@@ -180,23 +179,21 @@ static void cmd_task(void *arg)
     }
 }
 
-// shortcut: not verified on hardware yet; fallback is holding BOOT (GPIO0) while plugging in.
+// Reboot into ROM download mode, which shows up as USB-Serial/JTAG 303A:1001 (esptool's port).
+// Don't touch GPIO19/20 here: driving them low and then gpio_reset_pin() (which also enables pull-ups) left the S3-Zero
+// off USB entirely; without it ROM download mode shows up (tested 2026-11-21). Pads off for 100 ms is disconnect enough.
 void hw_dfu(void)
 {
     vTaskDelay(pdMS_TO_TICKS(100));  // let the "ok" reply go out
-    xSemaphoreTake(s_tx_lock, portMAX_DELAY);  // never given back: no CDC writes (log lines) into an uninstalled TinyUSB
+    esp_log_set_vprintf(vprintf);  // stop mirroring logs to CDC
+    esp_log_level_set("*", ESP_LOG_NONE);
+    vTaskDelay(pdMS_TO_TICKS(50));  // log task drains whatever is queued
+    xSemaphoreTake(s_tx_lock, portMAX_DELAY);  // never given back: no CDC writes into an uninstalled TinyUSB
     tinyusb_driver_uninstall();
-    // Hand the internal PHY back to USB-Serial/JTAG so the ROM download mode shows up as 303A:1001 (same as Arduino-ESP32).
+    // Hand the internal PHY back to USB-Serial/JTAG (TinyUSB moved it to OTG via RTC_CNTL usb_conf).
     CLEAR_PERI_REG_MASK(RTC_CNTL_USB_CONF_REG, RTC_CNTL_SW_HW_USB_PHY_SEL | RTC_CNTL_SW_USB_PHY_SEL | RTC_CNTL_USB_PAD_ENABLE);
     CLEAR_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_PHY_SEL | USB_SERIAL_JTAG_USB_PAD_ENABLE);
-    // Pull D-/D+ low briefly so the host sees a disconnect and re-enumerates.
-    gpio_set_direction(GPIO_NUM_19, GPIO_MODE_OUTPUT_OD);
-    gpio_set_direction(GPIO_NUM_20, GPIO_MODE_OUTPUT_OD);
-    gpio_set_level(GPIO_NUM_19, 0);
-    gpio_set_level(GPIO_NUM_20, 0);
-    esp_rom_delay_us(100 * 1000);  // D+/D- low: host sees a disconnect
-    gpio_reset_pin(GPIO_NUM_19);
-    gpio_reset_pin(GPIO_NUM_20);
+    esp_rom_delay_us(100 * 1000);  // pads off: the host sees a disconnect
     SET_PERI_REG_MASK(USB_SERIAL_JTAG_CONF0_REG, USB_SERIAL_JTAG_USB_PAD_ENABLE);  // pads back to USB-Serial/JTAG, or ROM download mode has no USB
     REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
     esp_restart();
